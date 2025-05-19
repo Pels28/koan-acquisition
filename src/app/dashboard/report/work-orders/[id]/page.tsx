@@ -1,0 +1,318 @@
+"use client";
+import jsPDF from "jspdf";
+import Button from "@/components/Button";
+import Link from "next/link";
+import { FiChevronRight } from "react-icons/fi";
+import { IoDownload } from "react-icons/io5";
+
+const WorkOrderReport = () => {
+    const mockReport = {
+      workOrderNumber: "WO-001",
+      date: "01/15/2024",
+      requester: "John Doe",
+      contactNumber: "(555) 123-4567",
+      assignedTechnician: "Sarah Johnson",
+      locationOfWork: "Main Facility, Unit 3B",
+      descriptionOfWork:
+        "Complete overhaul of hydraulic pump system including bearing replacement and pressure testing.",
+      startDate: "01/16/2024",
+      completionDate: "01/18/2024",
+      priority: "High",
+      partsAndMaterials: [
+        "High-pressure bearings (2 units)",
+        "Hydraulic seal kit",
+        "Grade 4 industrial lubricant (5L)"
+      ],
+      specialInstructions: [
+        "Perform maintenance during off-hours",
+        "Follow ISO 9001 safety protocols",
+        "Document pressure readings"
+      ],
+      approvalSignature: "",
+      nameAndTitle: "",
+      dateOfApproval: "",
+    };
+  
+    const generatePDF = () => {
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const margin = 15;
+      let yPos = margin;
+  
+      // Set primary color (blue-600)
+      const primaryColor = "#2563eb";
+      pdf.setFont("montserrat");
+  
+      // Header Section
+      pdf.setFont("montserrat", "bold");
+      pdf.setFontSize(20);
+      pdf.setTextColor(primaryColor);
+      pdf.text("KOAN TECHNICAL SERVICES", margin, yPos);
+      
+      pdf.setFontSize(10);
+      pdf.setTextColor(100);
+      yPos += 8;
+      pdf.text("123 Industrial Way • Tech City, TC 12345 • (555) 987-6543", margin, yPos);
+      
+      pdf.setFontSize(16);
+      pdf.setTextColor(40);
+      yPos += 15;
+      pdf.text("WORK ORDER REPORT", margin, yPos);
+      yPos += 10;
+  
+      // Divider Line
+      pdf.setDrawColor(primaryColor);
+      pdf.setLineWidth(0.5);
+      pdf.line(margin, yPos, pageWidth - margin, yPos);
+      yPos += 15;
+  
+      // Main Content
+      const addSection = (title: string, content: string[] | string) => {
+        if (yPos > 250) {
+          pdf.addPage();
+          yPos = margin;
+        }
+  
+        pdf.setFont("montserrat", "bold");
+        pdf.setFontSize(12);
+        pdf.setTextColor(primaryColor);
+        pdf.text(title.toUpperCase(), margin, yPos);
+        yPos += 8;
+  
+        pdf.setFont("montserrat", "normal");
+        pdf.setFontSize(11);
+        pdf.setTextColor(40);
+  
+        if (Array.isArray(content)) {
+          content.forEach((item) => {
+            pdf.text(`• ${item}`, margin + 5, yPos);
+            yPos += 8;
+            if (yPos > 280) {
+              pdf.addPage();
+              yPos = margin;
+            }
+          });
+        } else {
+          const splitText = pdf.splitTextToSize(content, pageWidth - margin * 2);
+          splitText.forEach((line: string) => {
+            pdf.text(line, margin, yPos);
+            yPos += 8;
+            if (yPos > 280) {
+              pdf.addPage();
+              yPos = margin;
+            }
+          });
+        }
+        yPos += 10;
+      };
+  
+      // Basic Information
+      addSection("Work Order Details", [
+        `Work Order Number: ${mockReport.workOrderNumber}`,
+        `Date Issued: ${mockReport.date}`,
+        `Requester: ${mockReport.requester}`,
+        `Contact Number: ${mockReport.contactNumber}`,
+        `Assigned Technician: ${mockReport.assignedTechnician}`,
+        `Priority Level: ${mockReport.priority}`
+      ]);
+  
+      // Location & Dates
+      addSection("Schedule & Location", [
+        `Work Location: ${mockReport.locationOfWork}`,
+        `Start Date: ${mockReport.startDate}`,
+        `Completion Date: ${mockReport.completionDate}`
+      ]);
+  
+      // Work Description
+      addSection("Work Description", mockReport.descriptionOfWork);
+  
+      // Parts & Materials
+      addSection("Required Parts/Materials", mockReport.partsAndMaterials);
+  
+      // Special Instructions
+      addSection("Special Instructions", mockReport.specialInstructions);
+  
+      // Approval Section
+      pdf.addPage();
+      yPos = margin;
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(14);
+      pdf.setTextColor(primaryColor);
+      pdf.text("Authorization & Approval", margin, yPos);
+      yPos += 20;
+  
+      // Signature Fields
+      const addSignatureField = (label: string) => {
+        pdf.setFontSize(11);
+        pdf.setTextColor(100);
+        pdf.text(label, margin, yPos);
+        yPos += 6;
+        pdf.setDrawColor(200);
+        pdf.line(margin, yPos, pageWidth - margin, yPos);
+        yPos += 20;
+      };
+  
+      addSignatureField("Approval Signature");
+      addSignatureField("Name & Title");
+      addSignatureField("Date of Approval");
+  
+      // Footer
+      pdf.setFontSize(10);
+      pdf.setTextColor(150);
+      pdf.text(`Generated by KOAN Workflow System • ${new Date().toLocaleDateString()}`, 
+        margin, pdf.internal.pageSize.getHeight() - 10);
+  
+      // Save PDF
+      pdf.save(`work-order-${mockReport.workOrderNumber}.pdf`);
+    };
+  
+  return (
+    <div className="min-h-screen font-montserrat bg-white p-8">
+      {/* Breadcrumb Navigation */}
+      <div className="px-6 pt-4">
+        <nav className="flex" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-2">
+            <li>
+              <div className="flex items-center">
+                <Link href="/dashboard/report" className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2">
+                  Report Dashboard
+                </Link>
+              </div>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <FiChevronRight className="w-4 h-4 text-gray-400" />
+                <Link href="/dashboard/report/work-orders" className="hover:text-blue-600">
+                  <span className="ml-1 text-sm font-medium hover:text-blue-600 md:ml-2">
+                    Work Orders Dashboard
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <FiChevronRight className="w-4 h-4 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">
+                  Work Order Report
+                </span>
+              </div>
+            </li>
+          </ol>
+        </nav>
+      </div>
+
+      {/* Report Preview */}
+      <div className="max-w-4xl mx-auto bg-white p-8 shadow-lg rounded-lg border border-gray-200">
+        <div className="text-center mb-8 border-b-2 border-blue-600 pb-6">
+          <h1 className="text-3xl font-bold text-blue-600 mb-2">KOAN TECHNICAL SERVICES</h1>
+          <p className="text-gray-600">123 Industrial Way • Tech City, TC 12345 • (555) 987-6543</p>
+          <h2 className="text-2xl font-semibold mt-4 text-gray-800">WORK ORDER REPORT</h2>
+        </div>
+
+        {/* Work Order Details */}
+        <div className="space-y-4 mb-8">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-semibold text-gray-600">Date</label>
+              <p className="border-b border-gray-200 pb-1">{mockReport.date}</p>
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-gray-600">Work Order Number</label>
+              <p className="border-b border-gray-200 pb-1">{mockReport.workOrderNumber}</p>
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-gray-600">Requester</label>
+              <p className="border-b border-gray-200 pb-1">{mockReport.requester}</p>
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-gray-600">Contact Number</label>
+              <p className="border-b border-gray-200 pb-1">{mockReport.contactNumber}</p>
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-gray-600">Assigned Technician</label>
+              <p className="border-b border-gray-200 pb-1">{mockReport.assignedTechnician}</p>
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-gray-600">Priority</label>
+              <p className="border-b border-gray-200 pb-1">{mockReport.priority}</p>
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="text-sm font-semibold text-gray-600">Location of Work</label>
+            <p className="border-b border-gray-200 pb-1">{mockReport.locationOfWork}</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <div>
+              <label className="text-sm font-semibold text-gray-600">Start Date</label>
+              <p className="border-b border-gray-200 pb-1">{mockReport.startDate}</p>
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-gray-600">Completion Date</label>
+              <p className="border-b border-gray-200 pb-1">{mockReport.completionDate}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Parts & Materials */}
+        <div className="mb-8">
+          <h3 className="text-sm font-semibold text-blue-600 mb-2">PARTS AND MATERIALS NEEDED</h3>
+          <ul className="list-disc pl-6 space-y-2">
+            {mockReport.partsAndMaterials.map((item, index) => (
+              <li key={index} className="text-gray-800">{item}</li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Special Instructions */}
+        <div className="mb-8">
+          <h3 className="text-sm font-semibold text-blue-600 mb-2">SPECIAL INSTRUCTIONS</h3>
+          <ol className="list-decimal pl-6 space-y-2">
+            {mockReport.specialInstructions.map((item, index) => (
+              <li key={index} className="text-gray-800">{item}</li>
+            ))}
+          </ol>
+        </div>
+
+        {/* Approval Section */}
+        <div className="mt-8 pt-6 border-t-2 border-blue-600">
+          <h3 className="text-lg font-semibold text-blue-600 mb-6">AUTHORIZATION & APPROVAL</h3>
+          <div className="space-y-8">
+            <div>
+              <label className="text-sm font-semibold text-gray-600">Approval Signature</label>
+              <div className="h-12 border-b-2 border-gray-300"></div>
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-gray-600">Name and Title</label>
+              <div className="h-12 border-b-2 border-gray-300"></div>
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-gray-600">Date of Approval</label>
+              <div className="h-12 border-b-2 border-gray-300"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Download Button */}
+        <div className="mt-8 text-center">
+          <Button
+            onPress={generatePDF}
+            size="lg"
+            variant="solid"
+            color="primary"
+            endContent={<IoDownload className="text-lg" />}
+            className="w-full md:w-auto"
+          >
+            Download PDF Report
+          </Button>
+          <p className="mt-4 text-sm text-gray-500">
+            This preview matches the downloadable PDF format
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default WorkOrderReport;
