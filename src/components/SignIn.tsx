@@ -5,6 +5,13 @@ import { Formik } from "formik";
 import { FaArrowRight } from "react-icons/fa6";
 import * as Yup from "yup";
 import { TbLockQuestion } from "react-icons/tb";
+import swal from "sweetalert2"
+
+import * as paths from "@/resources/paths";
+
+// import { toast } from "react-toastify";
+import { useContext, } from "react";
+import AuthContext, { AuthContextType } from "@/context/authContext";
 
 interface ISignInProps {
   onClose?: () => void;
@@ -12,6 +19,15 @@ interface ISignInProps {
 }
 
 const SignIn = ({ onComplete }: ISignInProps) => {
+  const { loginUser } = useContext(AuthContext) as AuthContextType;
+  // const dispatch = useDispatch()
+  // const {user, isLoading, isError, isSuccess, message} = useSelector((state) => state.auth)
+
+  // useEffect(() => {
+  //   if (isError) {
+  //     toast.error(<div>message</div>)
+  //   }
+  // }, [isError, message])
 
   return (
     <div className="text-primary overflow-auto">
@@ -30,10 +46,44 @@ const SignIn = ({ onComplete }: ISignInProps) => {
               .required("Email is required"),
             password: Yup.string().trim().required("Password required"),
           })}
-          onSubmit={async (values) => {
-            console.log(values);
-            onComplete();
-    
+          onSubmit={async (values, { setSubmitting }) => {
+            try {
+              // await dispatch(login(values)).unwrap();
+              // await dispatch(getUserInfo()).unwrap();
+              await loginUser(values.email, values.password);
+              swal.fire({
+                title: "Login Successful",
+                icon: "success",
+                toast: true,
+                timer: 6000,
+                position: "top-right",
+                timerProgressBar: true,
+                showConfirmButton: false,
+              });
+              onComplete();
+            } catch (error: unknown) {
+              let errorMessage = "Login failed. Please try again.";
+
+              // Use the message from rejectWithValue
+              if (typeof error === "string") {
+                errorMessage = error;
+              } else if (error instanceof Error) {
+                errorMessage = error.message;
+              }
+
+              // toast.error(errorMessage);
+              swal.fire({
+                title: errorMessage,
+                icon: "error",
+                toast: true,
+                timer: 3000,
+                position: "top-right",
+                timerProgressBar: true,
+                showConfirmButton: false,
+              });
+            } finally {
+              setSubmitting(false);
+            }
           }}
         >
           {({
@@ -85,10 +135,19 @@ const SignIn = ({ onComplete }: ISignInProps) => {
                 </Button>
 
                 <div>
-                  <div className="text-primary font-semibold flex justify-center items-center gap-x-1 cursor-pointer w-fit mx-auto">
+                  <div
+                    onClick={() => {
+                      window.history.pushState(
+                        {},
+                        "",
+                        `/?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.forgotPassword}`
+                      );
+                    }}
+                    className="text-primary font-semibold flex justify-center items-center gap-x-1 cursor-pointer w-fit mx-auto"
+                  >
                     <span>
                       <TbLockQuestion className="w-5 h-5" />
-                    </span>{" "}
+                    </span>
                     Forgot your password
                   </div>
                 </div>

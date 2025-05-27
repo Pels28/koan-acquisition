@@ -1,15 +1,30 @@
 "use client";
+
 import Button from "@/components/Button";
 import Input from "@/components/Input";
 import { Formik } from "formik";
 import { FaArrowRight, FaCheckCircle, FaTimes } from "react-icons/fa";
+// import { toast } from "react-toastify";
 import * as Yup from "yup";
+import { useContext } from "react";
+import AuthContext, { AuthContextType } from "@/context/authContext";
+import swal from "sweetalert2";
 
 interface ISignUpProps {
   onComplete: () => void;
 }
 
 const SignUp = ({ onComplete }: ISignUpProps) => {
+  const { registerUser } = useContext(AuthContext) as AuthContextType;
+  // const dispatch = useDispatch()
+  // const {user, isLoading, isError, isSuccess, message} = useSelector((state) => state.auth)
+
+  // useEffect(() => {
+  //   if (isError) {
+  //     toast.error(<div>message</div>)
+  //   }
+  // }, [isError, message])
+
   return (
     <div className="text-secondary overflow-auto">
       <div className="pt-2 pb-5 px-3 sm:pb-10 sm:px-6">
@@ -17,7 +32,7 @@ const SignUp = ({ onComplete }: ISignUpProps) => {
           initialValues={{
             firstName: "",
             lastName: "",
-            username: "", // email
+            email: "", // email
             password: "",
           }}
           validateOnBlur
@@ -25,22 +40,74 @@ const SignUp = ({ onComplete }: ISignUpProps) => {
           validationSchema={Yup.object().shape({
             firstName: Yup.string().trim().required("First name required"),
             lastName: Yup.string().trim().required("Last name required"),
-            username: Yup.string()
+            email: Yup.string()
               .trim()
               .email("Invalid email")
               .required("Email required"),
             password: Yup.string()
               .required("Password required")
               .min(8, "Password must be at least 8 characters")
-              .matches(/[A-Z]/, "Password must contain at least one uppercase letter")
-              .matches(/[a-z]/, "Password must contain at least one lowercase letter")
+              .matches(
+                /[A-Z]/,
+                "Password must contain at least one uppercase letter"
+              )
+              .matches(
+                /[a-z]/,
+                "Password must contain at least one lowercase letter"
+              )
               .matches(/\d/, "Password must contain at least one number")
-              .matches(/[^A-Za-z0-9]/, "Password must contain at least one special character")
+              .matches(
+                /[^A-Za-z0-9]/,
+                "Password must contain at least one special character"
+              )
               .matches(/^\S*$/, "Password must not contain spaces"),
           })}
-          onSubmit={async (values) => {
-            console.log(values);
-            onComplete();
+          onSubmit={async (values, { setSubmitting }) => {
+            try {
+              const {
+                email,
+                firstName: first_name,
+                lastName: last_name,
+                password,
+              } = values;
+
+              await registerUser(first_name, last_name, email, password);
+              swal.fire({
+                title: "Login Successful",
+                icon: "success",
+                toast: true,
+                timer: 3000,
+                position: "top-right",
+                timerProgressBar: true,
+                showConfirmButton: false,
+              });
+
+              // await dispatch(register(userData)).unwrap();
+              // dispatch(reset());
+              onComplete();
+            } catch (error: unknown) {
+              let errorMessage =
+                "Registration failed. Please check your details.";
+
+              if (typeof error === "string") {
+                errorMessage = error;
+              } else if (error instanceof Error) {
+                errorMessage = error.message;
+              }
+
+              // toast.error(errorMessage);
+              swal.fire({
+                title: errorMessage,
+                icon: "error",
+                toast: true,
+                timer: 6000,
+                position: "top-right",
+                timerProgressBar: true,
+                showConfirmButton: false,
+              });
+            } finally {
+              setSubmitting(false);
+            }
           }}
         >
           {({
@@ -112,16 +179,16 @@ const SignUp = ({ onComplete }: ISignUpProps) => {
 
                   <div className="col-span-2">
                     <Input
-                      name="username"
+                      name="email"
                       label="Email"
                       type="email"
                       labelPlacement="outside"
                       radius="md"
                       size="lg"
-                      value={values.username}
+                      value={values.email}
                       onChange={handleChange}
                       onBlur={handleBlur}
-                      error={touched.username ? errors.username : ""}
+                      error={touched.email ? errors.email : ""}
                     />
                   </div>
 

@@ -1,13 +1,23 @@
 "use client";
 import { FiFileText, FiArchive } from "react-icons/fi";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 const ReportDashboard = () => {
-  // Temporary mock report counts
-  const mockStats = {
-    workOrders: 15,
-    landAcquisitions: 8
-  };
+  const [mockStats, setMockStats] = useState({
+    workOrders: 0,
+    landAcquisitions: 0
+  });
+
+  useEffect(() => {
+    // Simulated API call
+    setTimeout(() => {
+      setMockStats({
+        workOrders: 15,
+        landAcquisitions: 8
+      });
+    }, 500);
+  }, []);
 
   return (
     <div className="max-w-4xl mx-auto p-6">

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Lato, Montserrat, Poppins } from "next/font/google";
 import "./globals.css";
-import Provider from "./Provider";
-import { SearchParamWrapper } from "./SearchParamWrapper";
+import Provider from "../components/Provider";
+import { SearchParamWrapper } from "@/components/SearchParamWrapper";
 
 const poppins = Poppins({
   weight: ["100", "200", "300", "500", "600"],

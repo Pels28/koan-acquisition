@@ -6,6 +6,10 @@ import useModal from "@/hooks/modalHook";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useCallback, useEffect } from "react";
 import * as paths from "@/resources/paths";
+import ForgotPassword from "./ForgotPassword";
+import InstructionSent from "./InstructionsSent";
+// import VerificationSent from "./VerificationSent";
+// import ConfirmPassword from "./password/reset/confirm/[uid]/[token]/page";
 
 const Navbar = () => {
   const { showModal, closeModal, showLoadingScreen, MemoizedModal } =
@@ -31,6 +35,7 @@ const Navbar = () => {
       title: "Login",
       size: "2xl",
       padded: true,
+      showCloseButton: true,
       children: (
         <SignIn
           onComplete={() => {
@@ -41,6 +46,7 @@ const Navbar = () => {
           }}
         />
       ),
+
       baseClassName: "!pb-0",
       onCloseCallback: () => {
         closeModal();
@@ -58,9 +64,17 @@ const Navbar = () => {
       children: (
         <SignUp
           onComplete={() => {
-            router.push("/dashboard")
+            showLoadingScreen()
             closeModal();
-            showLoadingScreen();
+            // setTimeout(() => {
+            //   showModal({
+            //     title: "",
+            //     size: "xl",
+            //     children: (
+            //       <VerificationSent email={email} onClose={closeModal} />
+            //     ),
+            //   });
+            // }, 500);
           }}
         />
       ),
@@ -70,8 +84,49 @@ const Navbar = () => {
         closeAuthPopUps();
       },
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [showModal, closeModal, showLoadingScreen, closeAuthPopUps]); // Add all dependencies used in the callback
+
+  const showForgotPassword = () => {
+    showModal({
+      title: "",
+      size: "xl",
+      padded: true,
+      children: (
+        <ForgotPassword
+          onComplete={(email) => {
+            closeModal();
+            console.log("Pels");
+            setTimeout(() => {
+              showModal({
+                title: "",
+                size: "xl",
+                children: (
+                  <InstructionSent email={email} onClose={closeModal} />
+                ),
+              });
+            }, 100);
+          }}
+        />
+      ),
+      baseClassName: "!pb-0",
+      onCloseCallback: () => {
+        closeModal();
+        closeAuthPopUps();
+      },
+    });
+  }; // Add all dependencies used in the callback
+
+  // const showConfirmPassword = () => {
+  //   showModal({
+  //     title: "",
+  //     size: "xl",
+  //     children: <ConfirmPassword onComplete={closeModal} />,
+  //     onCloseCallback: () => {
+  //       window.history.pushState({}, "", `/?${paths.AUTH_SEARCH_PARAM_KEY}=''`);
+  //     },
+  //   });
+  // };
 
   useEffect(() => {
     const key = searchParams.get(paths.AUTH_SEARCH_PARAM_KEY);
@@ -83,13 +138,17 @@ const Navbar = () => {
         case paths.SEARCH_PARAMS.auth.signUp:
           showRegister();
           break;
+
+        case paths.SEARCH_PARAMS.auth.forgotPassword:
+          showForgotPassword();
+          break;
         default:
           // Clear the auth param if it's not recognized
           closeAuthPopUps();
           break;
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]); // Remove showRegister and showSignIn from dependencies
 
   return (

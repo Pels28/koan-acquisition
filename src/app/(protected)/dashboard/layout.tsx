@@ -5,6 +5,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { Avatar } from "@heroui/react";
 import Dropdown from "@/components/Dropdown";
 import { PiSignOutBold } from "react-icons/pi";
+import * as paths from "@/resources/paths";
+import { useContext, useEffect, useRef, useState } from "react";
+import AuthContext, { AuthContextType } from "@/context/authContext";
+import swal from "sweetalert2";
+import { MdAddAPhoto } from "react-icons/md";
+import useAxios from "@/utils/useAxios";
 
 export default function DashboardLayout({
   children,
@@ -14,10 +20,87 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
 
+  const inputFileRef = useRef<HTMLInputElement>(null);
+  const api = useAxios();
+  const [userImage, setUserImage] = useState("");
+
   const isActive = (route: string) => pathname.startsWith(route);
+
+  const { user, logoutUser, setUser } = useContext(
+    AuthContext
+  ) as AuthContextType;
+
+  useEffect(() => {
+    if (!user) {
+      router.replace(
+        `/?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.signIn}`
+      );
+    }
+  }, [user, router]);
+
+  console.log(user?.image);
+
+  useEffect(() => {
+    const fetchUserImage = async () => {
+      try {
+        const userResponse = await api.get("api/user/me/");
+
+        console.log("userResponse", userResponse);
+        setUserImage(userResponse.data.profile.image);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchUserImage();
+  });
+
+  const handleFileUpload = async (file: File) => {
+    if (!user) return;
+
+    console.log("Clicekd");
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const response = await api.put("api/user/image/", formData);
+
+      console.log("response", response.data.user.profile.image);
+      setUserImage(response.data.user.profile.image);
+      setUser((prev) => ({ ...prev, image: response.data.user.profile.image }));
+    } catch (error) {
+      // swal.fire({
+      //     title: 'Upload Failed',
+      //     text: 'Could not update profile image',
+      //     icon: 'error',
+      //     toast: true,
+      //     timer: 3000,
+      //     position: 'top-right'
+      // });
+      console.error(error);
+    }
+  };
+
+  // useEffect(() => {
+  //   if (user?.access) {
+  //     dispatch(getUserInfo());
+  //   }
+  // }, [dispatch, user?.access])
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
+      <input
+        type="file"
+        ref={inputFileRef}
+        className="hidden"
+        accept="image/*"
+        onChange={(e) => {
+          if (e.target.files?.[0]) {
+            handleFileUpload(e.target.files[0]);
+          }
+        }}
+      />
       {/* Header */}
       <header className="bg-primary text-white py-4 px-6 shadow-md flex-shrink-0">
         <div className="container mx-auto flex justify-between items-center">
@@ -25,10 +108,36 @@ export default function DashboardLayout({
           <Dropdown
             options={[
               {
+                id: "add-photo",
+                label: <div className="font-montserrat">Add Photo</div>,
+
+                icon: <MdAddAPhoto className="w-5 h-5" />,
+                onClick: () => {
+                  inputFileRef.current?.click();
+                },
+              },
+              {
                 id: "sign-out",
-                label: <div>Sign Out</div>,
+                label: <div className="font-montserrat">Sign Out</div>,
                 icon: <PiSignOutBold className="w-5 h-5" />,
-                onClick: () => { router.push("/") }
+                onClick: () => {
+                  logoutUser();
+                  swal.fire({
+                    title: "Logged out Successfully",
+                    icon: "success",
+                    toast: true,
+                    timer: 3000,
+                    position: "top-right",
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                  });
+                  // router.replace(`/?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.signIn}`)
+                  // window.history.replaceState(
+                  //   {},
+                  //   "",
+                  //   `/?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.signIn}`
+                  // );
+                },
               },
             ]}
           >
@@ -36,9 +145,9 @@ export default function DashboardLayout({
               <Avatar
                 isBordered
                 showFallback
-                name="Pels"
+                name={user?.first_name}
                 size="lg"
-                src="https://i.pravatar.cc/150?u=a04258114e29026302d"
+                src={userImage}
               />
             </span>
           </Dropdown>
