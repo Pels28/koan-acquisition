@@ -38,14 +38,14 @@ export default function DashboardLayout({
     }
   }, [user, router]);
 
-  console.log(user?.image);
+
 
   useEffect(() => {
     const fetchUserImage = async () => {
       try {
         const userResponse = await api.get("api/user/me/");
 
-        console.log("userResponse", userResponse);
+      
         setUserImage(userResponse.data.profile.image);
       } catch (error) {
         console.error(error);
@@ -58,7 +58,7 @@ export default function DashboardLayout({
   const handleFileUpload = async (file: File) => {
     if (!user) return;
 
-    console.log("Clicekd");
+   
 
     const formData = new FormData();
     formData.append("image", file);
@@ -66,7 +66,6 @@ export default function DashboardLayout({
     try {
       const response = await api.put("api/user/image/", formData);
 
-      console.log("response", response.data.user.profile.image);
       setUserImage(response.data.user.profile.image);
       setUser((prev) => ({ ...prev, image: response.data.user.profile.image }));
     } catch (error) {

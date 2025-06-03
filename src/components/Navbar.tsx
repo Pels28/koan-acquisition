@@ -96,7 +96,7 @@ const Navbar = () => {
         <ForgotPassword
           onComplete={(email) => {
             closeModal();
-            console.log("Pels");
+           
             setTimeout(() => {
               showModal({
                 title: "",

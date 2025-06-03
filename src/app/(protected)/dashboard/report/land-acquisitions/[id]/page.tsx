@@ -1,433 +1,6 @@
-// "use client";
-// import Button from "@/components/Button";
-// import Link from "next/link";
-// import { FC, useRef } from "react";
-// import { FiChevronRight } from "react-icons/fi";
-// import { IoDownload, IoPrint } from "react-icons/io5";
-// import jsPDF from "jspdf";
-// import html2canvas from "html2canvas";
-
-// const Checkbox: FC<{ checked: boolean }> = ({ checked }) => (
-//   <span className="mr-2">{checked ? "✓" : "☐"}</span>
-// );
-
-// const LandAcquisitionReport = () => {
-
-//   const reportRef = useRef<HTMLDivElement>(null);
-//   // Mock data
-//   const mockData = {
-//     propertyType: "station",
-//     location: {
-//       region: "Greater Accra",
-//       district: "Accra Metropolitan",
-//       road: "Liberty Avenue",
-//     },
-//     stationDetails: {
-//       type: "fuel",
-//       currentOMC: "Vivo Energy",
-//       debtWithOMC: "GHC 12,000",
-//       tankCapacity: {
-//         diesel: "30,000L",
-//         super: "25,000L",
-//       },
-//     },
-//     projectedVolume: "150,000L/month",
-//     lease: {
-//       years: "15",
-//       remaining: "10 years",
-//     },
-//     loadingLocation: "Tema Port",
-//     distance: "25km",
-//     decision: "accept",
-//     reason:
-//       "Strategic location with high growth potential. Meets all safety requirements.",
-//     civilWorks: {
-//       estimatedCost: "GHC 450,000",
-//       forecourt: { required: "yes", comment: "Needs resurfacing" },
-//       building: { required: "yes", comment: "New construction needed" },
-//       canopy: { required: "no", comment: "Existing structure adequate" },
-//       tankFarm: { required: "yes", comment: "Upgrade required" },
-//       electricals: { required: "yes", comment: "Full rewiring needed" },
-//       interceptor: { status: "available", functional: "functional" },
-//       vents: { status: "available", functional: "non-functional" },
-//       otherWorks: "Install new fire suppression system",
-//     },
-//     logistics: [
-//       "2x Fuel Trucks",
-//       "Loading pumps",
-//       "Safety equipment",
-//       "POS system",
-//     ],
-//     totalEstimatedCost: "GHC 2,450,000",
-//     originator: "John Doe",
-//     distributionManager: "Sarah Smith",
-//     position: "Acquisition Specialist",
-//     approvals: {
-//       generalManager: {
-//         name: "Michael Johnson",
-//         date: "2024-03-15",
-//       },
-//       managingDirector: {
-//         name: "Emily Davis",
-//         date: "2024-03-16",
-//       },
-//     },
-//   };
-
-//   const generatePDF = async () => {
-//     if (!reportRef.current) return;
-
-//     const pdf = new jsPDF("p", "mm", "a4");
-//     const element = reportRef.current;
-
-//     const canvas = await html2canvas(element, {
-//       scale: 2,
-//       useCORS: true,
-//       logging: true,
-//       backgroundColor: "#ffffff",
-//     });
-
-//     const imgData = canvas.toDataURL("image/png");
-//     const imgWidth = 210; // A4 width in mm
-//     const pageHeight = 297; // A4 height in mm
-//     const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-//     let heightLeft = imgHeight;
-//     let position = 0;
-
-//     pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-//     heightLeft -= pageHeight;
-
-//     while (heightLeft >= 0) {
-//       position = heightLeft - imgHeight;
-//       pdf.addPage();
-//       pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-//       heightLeft -= pageHeight;
-//     }
-
-//     pdf.save(`land-acquisition-report-${new Date().toISOString()}.pdf`);
-//   };
-
-//   return (
-//     <>
-//       <div className="px-6 pt-4 font-montserrat">
-//         <nav className="flex" aria-label="Breadcrumb">
-//           <ol className="inline-flex items-center space-x-1 md:space-x-2">
-//             <li>
-//               <div className="flex items-center">
-//                 {/* <FiChevronRight className="w-4 h-4 text-gray-400" /> */}
-//                 <Link
-//                   href="/dashboard/report"
-//                   className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
-//                 >
-//                   Report Dashboard
-//                 </Link>
-//               </div>
-//             </li>
-//             <li>
-//               <div className="flex items-center">
-//                 <FiChevronRight className="w-4 h-4 text-gray-400" />
-//                 <Link
-//                   href="/dashboard/report/land-acquistions"
-//                   className="hover:text-blue-600 "
-//                 >
-//                   <span className="ml-1 text-sm font-medium hover:text-blue-600 md:ml-2">
-//                     Land Acquisition Dashbaord
-//                   </span>
-//                 </Link>
-//               </div>
-//             </li>
-
-//             <li aria-current="page">
-//               <div className="flex items-center">
-//                 <FiChevronRight className="w-4 h-4 text-gray-400" />
-//                 <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">
-//                   Land Acquisition Report
-//                 </span>
-//               </div>
-//             </li>
-//           </ol>
-//         </nav>
-//       </div>
-//       <div className="min-h-screen bg-white p-8 font-montserrat">
-//       <div ref={reportRef} className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-sm">
-//           {/* Header */}
-//           <div className="mb-8 border-b-2 border-gray-200 pb-4">
-//             <div className="flex justify-between items-center">
-//               <div>
-//                 <h1 className="text-2xl font-bold text-gray-800">
-//                   Company Name
-//                 </h1>
-//                 <p className="text-gray-600">123 Business Street, Accra</p>
-//                 <p className="text-gray-600">Tel: +233 123 456 789</p>
-//               </div>
-//               <div className="text-right">
-//                 <div className="text-xs text-gray-500">
-//                   Report Date: {new Date().toLocaleDateString()}
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-
-//           {/* Title */}
-//           <h2 className="text-2xl font-bold mb-6 text-center uppercase text-gray-800">
-//             Land / Station Acquisition Report
-//           </h2>
-
-//           {/* Section A */}
-//           <div className="mb-8">
-//             <h3 className="text-lg font-semibold mb-4 border-b border-gray-200 pb-2">
-//               Section A: Property Details
-//             </h3>
-
-//             <div className="grid grid-cols-2 gap-4 mb-4">
-//               <div>
-//                 <label className="font-medium">Property Type:</label>
-//                 <span className="ml-2">
-//                   {mockData.propertyType === "land" ? "Land" : "Station"}
-//                 </span>
-//               </div>
-//               <div>
-//                 <label className="font-medium">Location:</label>
-//                 <span className="ml-2">
-//                   {mockData.location.region}, {mockData.location.district},{" "}
-//                   {mockData.location.road}
-//                 </span>
-//               </div>
-//             </div>
-
-//             {mockData.propertyType === "station" && (
-//               <div className="space-y-4">
-//                 <div className="grid grid-cols-2 gap-4">
-//                   <div>
-//                     <label className="font-medium">Station Type:</label>
-//                     <span className="ml-2 capitalize">
-//                       {mockData.stationDetails.type}
-//                     </span>
-//                   </div>
-//                   <div>
-//                     <label className="font-medium">Current OMC:</label>
-//                     <span className="ml-2">
-//                       {mockData.stationDetails.currentOMC}
-//                     </span>
-//                   </div>
-//                   <div>
-//                     <label className="font-medium">Debt with OMC:</label>
-//                     <span className="ml-2">
-//                       {mockData.stationDetails.debtWithOMC}
-//                     </span>
-//                   </div>
-//                   <div>
-//                     <label className="font-medium">Tank Capacities:</label>
-//                     <span className="ml-2">
-//                       Diesel: {mockData.stationDetails.tankCapacity.diesel},
-//                       Super: {mockData.stationDetails.tankCapacity.super}
-//                     </span>
-//                   </div>
-//                 </div>
-//               </div>
-//             )}
-
-//             <div className="grid grid-cols-2 gap-4 mt-4">
-//               <div>
-//                 <label className="font-medium">Projected Volume:</label>
-//                 <span className="ml-2">{mockData.projectedVolume}</span>
-//               </div>
-//               <div>
-//                 <label className="font-medium">Lease Term:</label>
-//                 <span className="ml-2">
-//                   {mockData.lease.years} years ({mockData.lease.remaining}{" "}
-//                   remaining)
-//                 </span>
-//               </div>
-//               <div>
-//                 <label className="font-medium">Loading Location:</label>
-//                 <span className="ml-2">
-//                   {mockData.loadingLocation} ({mockData.distance} distance)
-//                 </span>
-//               </div>
-//             </div>
-
-//             <div className="mt-4">
-//               <label className="font-medium block mb-2">Decision:</label>
-//               <div className="flex items-center">
-//                 <Checkbox checked={mockData.decision === "accept"} />
-//                 <span className="mr-4">Accept</span>
-//                 <Checkbox checked={mockData.decision === "reject"} />
-//                 <span>Reject</span>
-//               </div>
-//             </div>
-
-//             <div className="mt-4">
-//               <label className="font-medium block mb-2">Reason:</label>
-//               <p className="border rounded p-3 text-gray-700">
-//                 {mockData.reason}
-//               </p>
-//             </div>
-//           </div>
-
-//           {/* Section B */}
-//           <div className="mb-8">
-//             <h3 className="text-lg font-semibold mb-4 border-b border-gray-200 pb-2">
-//               Section B: Works & Logistics
-//             </h3>
-
-//             <div className="mb-6">
-//               <h4 className="font-medium mb-2">
-//                 Civil Works (Estimated Cost: {mockData.civilWorks.estimatedCost}
-//                 )
-//               </h4>
-//               <div className="grid grid-cols-3 gap-4 mb-4">
-//                 <div className="col-span-1 font-medium">Item</div>
-//                 <div className="col-span-1 font-medium">Required</div>
-//                 <div className="col-span-1 font-medium">Comments</div>
-//               </div>
-
-//               {[
-//                 { label: "Forecourt", key: "forecourt" },
-//                 { label: "Building/Offices", key: "building" },
-//                 { label: "Canopy", key: "canopy" },
-//                 { label: "Tank Farm", key: "tankFarm" },
-//                 { label: "Electricals", key: "electricals" },
-//               ].map((item) => (
-//                 <div key={item.key} className="grid grid-cols-3 gap-4 mb-2">
-//                   <div>{item.label}</div>
-//                   <div>
-//                     <Checkbox
-//                       checked={mockData.civilWorks[item.key].required === "yes"}
-//                     />
-//                   </div>
-//                   <div>{mockData.civilWorks[item.key].comment}</div>
-//                 </div>
-//               ))}
-
-//               <div className="mt-4 grid grid-cols-3 gap-4">
-//                 <div>Interceptor</div>
-//                 <div>{mockData.civilWorks.interceptor.status}</div>
-//                 <div>
-//                   Functional: {mockData.civilWorks.interceptor.functional}
-//                 </div>
-//               </div>
-
-//               <div className="grid grid-cols-3 gap-4 mt-2">
-//                 <div>Vents</div>
-//                 <div>{mockData.civilWorks.vents.status}</div>
-//                 <div>Functional: {mockData.civilWorks.vents.functional}</div>
-//               </div>
-//             </div>
-
-//             <div className="mt-6">
-//               <h4 className="font-medium mb-2">Other Works Required:</h4>
-//               <p className="border rounded p-3 text-gray-700">
-//                 {mockData.civilWorks.otherWorks}
-//               </p>
-//             </div>
-
-//             <div className="mt-6">
-//               <h4 className="font-medium mb-2">Logistics Required:</h4>
-//               <ul className="list-disc pl-6">
-//                 {mockData.logistics.map((item, index) => (
-//                   <li key={index} className="mb-1">
-//                     {item}
-//                   </li>
-//                 ))}
-//               </ul>
-//             </div>
-
-//             <div className="mt-6">
-//               <h4 className="font-medium text-lg">Total Estimated Cost:</h4>
-//               <p className="text-2xl font-bold mt-2">
-//                 {mockData.totalEstimatedCost}
-//               </p>
-//             </div>
-//           </div>
-
-//           {/* Signatures Section */}
-//   <div className="mt-8 border-t-2 border-gray-200 pt-6">
-//   <div className="grid grid-cols-2 gap-8">
-//       <div>
-//         <div className="mb-4">
-//           <label className="block font-medium">Originator:</label>
-//           <div className="mt-1 border-b-2 border-gray-400 pb-1 w-48">
-//             {mockData.originator}
-//           </div>
-//         </div>
-
-//         <div className="mb-4">
-//           <label className="block font-medium">
-//             Distribution/Marketing Manager:
-//           </label>
-//           <div className="mt-1 border-b-2 border-gray-400 pb-1 w-48">
-//             {mockData.distributionManager}
-//           </div>
-//         </div>
-
-//         <div>
-//           <label className="block font-medium">Position:</label>
-//           <div className="mt-1 border-b-2 border-gray-400 pb-1 w-48">
-//             {mockData.position}
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Approvals Section */}
-//       <div>
-//         <h3 className="font-medium mb-4">Approvals:</h3>
-//         <div className="space-y-6">
-//           <div>
-//             <label className="block font-medium">
-//               General Manager:
-//             </label>
-//             <div className="mt-1 border-b-2 border-gray-400 pb-1 w-48">
-//               {mockData.approvals.generalManager.name}
-//             </div>
-//             <div className="mt-2 text-sm">
-//               Date: {mockData.approvals.generalManager.date}
-//             </div>
-//           </div>
-
-//           <div>
-//             <label className="block font-medium">
-//               Managing Director:
-//             </label>
-//             <div className="mt-1 border-b-2 border-gray-400 pb-1 w-48">
-//               {mockData.approvals.managingDirector.name}
-//             </div>
-//             <div className="mt-2 text-sm">
-//               Date: {mockData.approvals.managingDirector.date}
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   </div>
-// </div>
-
-//         {/* Print Button - Not included in print output */}
-//       </div>
-//       <div className="mt-8 text-center print:hidden">
-//           <Button
-//             onPress={generatePDF}
-//             color="primary"
-//             variant="solid"
-//             size="lg"
-//             radius="md"
-//             endContent={<IoDownload className="text-lg" />}
-//           >
-//             Download PDF Report
-//           </Button>
-//           <p className="mt-4 text-sm text-gray-500">
-//             Official document requires authorized signatures and company stamp
-//           </p>
-//         </div>
-//     </>
-//   );
-// };
-
-// export default LandAcquisitionReport;
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import Button from "@/components/Button";
@@ -435,71 +8,40 @@ import Link from "next/link";
 import { FiChevronRight } from "react-icons/fi";
 import { IoDownload } from "react-icons/io5";
 import { Image } from "@heroui/react";
-
-
+import { useParams } from "next/navigation";
+import useAxios from "@/utils/useAxios";
+import { LandAcquisition } from "@/resources/states";
+import ReportSkeleton from "./ReportSkeleton";
 
 const LandAcquisitionReport = () => {
   const reportRef = useRef<HTMLDivElement>(null);
+  const params = useParams();
+  const api = useAxios();
+  const [landAcquisitionData, setLandAcquisitionData] =
+    useState<LandAcquisition | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data
-  const mockData = {
-    propertyType: "station",
-    location: {
-      region: "Greater Accra",
-      district: "Accra Metropolitan",
-      road: "Liberty Avenue",
-    },
-    stationDetails: {
-      type: "fuel",
-      currentOMC: "Vivo Energy",
-      debtWithOMC: "GHC 12,000",
-      tankCapacity: {
-        diesel: "30,000L",
-        super: "25,000L",
-      },
-    },
-    projectedVolume: "150,000L/month",
-    lease: {
-      years: "15",
-      remaining: "10 years",
-    },
-    loadingLocation: "Tema Port",
-    distance: "25km",
-    decision: "accept",
-    reason:
-      "Strategic location with high growth potential. Meets all safety requirements.",
-    civilWorks: {
-      estimatedCost: "GHC 450,000",
-      forecourt: { required: "yes", comment: "Needs resurfacing" },
-      building: { required: "yes", comment: "New construction needed" },
-      canopy: { required: "no", comment: "Existing structure adequate" },
-      tankFarm: { required: "yes", comment: "Upgrade required" },
-      electricals: { required: "yes", comment: "Full rewiring needed" },
-      interceptor: { status: "available", functional: "functional" },
-      vents: { status: "available", functional: "non-functional" },
-      otherWorks: "Install new fire suppression system",
-    },
-    logistics: [
-      "2x Fuel Trucks",
-      "Loading pumps",
-      "Safety equipment",
-      "POS system",
-    ],
-    totalEstimatedCost: "GHC 2,450,000",
-    originator: "John Doe",
-    distributionManager: "Sarah Smith",
-    position: "Acquisition Specialist",
-    approvals: {
-      generalManager: {
-        name: "Michael Johnson",
-        date: "2024-03-15",
-      },
-      managingDirector: {
-        name: "Emily Davis",
-        date: "2024-03-16",
-      },
-    },
-  };
+  useEffect(() => {
+    const fetchLandAcquistion = async () => {
+      try {
+        setIsLoading(true);
+        const response = await api.get(`land-acquisitions/${params.id}/`);
+      
+        setLandAcquisitionData(response.data);
+      } catch (error: any) {
+        console.error(error);
+        setError(error)
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchLandAcquistion();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.id]);
+
+ 
 
   const generatePDF = async () => {
     if (!reportRef.current) return;
@@ -579,6 +121,32 @@ const LandAcquisitionReport = () => {
     pdf.save("land-acquisition-report.pdf");
   };
 
+  if (isLoading) {
+    return <ReportSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">{error}</div>
+          <Button onPress={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!landAcquisitionData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-gray-500 mb-4">No data available</div>
+          <Button onPress={() => window.location.reload()}>Refresh</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       {/* Breadcrumb Navigation (hidden in PDF) */}
@@ -625,7 +193,6 @@ const LandAcquisitionReport = () => {
         <div
           ref={reportRef}
           className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-sm print:shadow-none print:max-w-full"
-        
         >
           {/* Header */}
           <div className="mb-8 border-b-2 border-primary pb-4 print:border-b print:border-gray-300">
@@ -653,8 +220,8 @@ const LandAcquisitionReport = () => {
                   Report Date: {new Date().toLocaleDateString("en-GB")}
                 </div>
                 <div className="mt-2 text-xs text-gray-500 print:text-xs">
-                  Document ID:{" "}
-                  {Math.random().toString(36).substring(2, 10).toUpperCase()}
+                  Document ID:{landAcquisitionData.id}
+                  {/* {Math.random().toString(36).substring(2, 10).toUpperCase()} */}
                 </div>
               </div>
             </div>
@@ -678,7 +245,7 @@ const LandAcquisitionReport = () => {
                   Property Type
                 </h4>
                 <p className="font-medium print:text-sm">
-                  {mockData.propertyType}
+                  {landAcquisitionData.propertyType}
                 </p>
               </div>
               <div>
@@ -686,7 +253,7 @@ const LandAcquisitionReport = () => {
                   Location
                 </h4>
                 <p className="font-medium print:text-sm">
-                  {mockData.location.road}
+                  {landAcquisitionData.locationRoad}
                 </p>
               </div>
               <div>
@@ -695,12 +262,12 @@ const LandAcquisitionReport = () => {
                 </h4>
                 <p
                   className={`font-medium print:text-sm ${
-                    mockData.decision === "accept"
+                    landAcquisitionData.decision === "accept"
                       ? "text-green-600"
                       : "text-red-600"
                   }`}
                 >
-                  {mockData.decision.toUpperCase()}
+                  {landAcquisitionData.decision.toUpperCase()}
                 </p>
               </div>
             </div>
@@ -722,52 +289,76 @@ const LandAcquisitionReport = () => {
                     <tr>
                       <td className="py-1 text-gray-600 w-1/3">Region:</td>
                       <td className="py-1 font-medium">
-                        {mockData.location.region}
+                        {landAcquisitionData.locationRegion}
                       </td>
                     </tr>
                     <tr>
                       <td className="py-1 text-gray-600">District:</td>
                       <td className="py-1 font-medium">
-                        {mockData.location.district}
+                        {landAcquisitionData.locationDistrict}
                       </td>
                     </tr>
                     <tr>
                       <td className="py-1 text-gray-600">Road:</td>
                       <td className="py-1 font-medium">
-                        {mockData.location.road}
+                        {landAcquisitionData.locationRoad}
                       </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
 
-              <div>
-                <h4 className="text-md font-medium mb-2 print:text-sm">
-                  Station Details
-                </h4>
-                <table className="w-full text-sm print:text-xs">
-                  <tbody>
-                    <tr>
-                      <td className="py-1 text-gray-600 w-1/3">Type:</td>
-                      <td className="py-1 font-medium">
-                        {mockData.stationDetails.type}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="py-1 text-gray-600">Current OMC:</td>
-                      <td className="py-1 font-medium">
-                        {mockData.stationDetails.currentOMC}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="py-1 text-gray-600">Debt with OMC:</td>
-                      <td className="py-1 font-medium">
-                        {mockData.stationDetails.debtWithOMC}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              {landAcquisitionData.propertyType === "land" ? (
+                <div>
+                  <h4 className="text-md font-medium mb-2 print:text-sm">
+                    Land Details
+                  </h4>
+                  <table className="w-full text-sm print:text-xs">
+                    <tbody>
+                      <tr>
+                        <td className="py-1 text-gray-600 w-1/3">Land Size:</td>
+                        <td className="py-1 font-medium">
+                          {landAcquisitionData.landSize}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-1 text-gray-600">Land Value:</td>
+                        <td className="py-1 font-medium">
+                          {landAcquisitionData.landValue}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div>
+                  <h4 className="text-md font-medium mb-2 print:text-sm">
+                    Station Details
+                  </h4>
+                  <table className="w-full text-sm print:text-xs">
+                    <tbody>
+                      <tr>
+                        <td className="py-1 text-gray-600 w-1/3">Type:</td>
+                        <td className="py-1 font-medium">
+                          {landAcquisitionData.stationType}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-1 text-gray-600">Current OMC:</td>
+                        <td className="py-1 font-medium">
+                          {landAcquisitionData.stationCurrentOMC}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-1 text-gray-600">Debt with OMC:</td>
+                        <td className="py-1 font-medium">
+                          {landAcquisitionData.stationDebtWithOMC}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
             <div className="mt-6">
@@ -780,7 +371,7 @@ const LandAcquisitionReport = () => {
                     Diesel
                   </div>
                   <div className="font-medium print:text-sm">
-                    {mockData.stationDetails.tankCapacity.diesel}
+                    {landAcquisitionData.stationTankCapacityDiesel}
                   </div>
                 </div>
                 <div className="p-3 border border-gray-200 rounded-lg print:p-2 print:border-gray-300">
@@ -788,7 +379,7 @@ const LandAcquisitionReport = () => {
                     Super
                   </div>
                   <div className="font-medium print:text-sm">
-                    {mockData.stationDetails.tankCapacity.super}
+                    {landAcquisitionData.stationTankCapacitySuper}
                   </div>
                 </div>
               </div>
@@ -804,12 +395,15 @@ const LandAcquisitionReport = () => {
                     <td className="py-1 text-gray-600 w-1/3">
                       Total Lease Years:
                     </td>
-                    <td className="py-1 font-medium">{mockData.lease.years}</td>
+                    <td className="py-1 font-medium">
+                      {landAcquisitionData.leaseYears}
+                    </td>
                   </tr>
                   <tr>
                     <td className="py-1 text-gray-600">Remaining Lease:</td>
                     <td className="py-1 font-medium">
-                      {mockData.lease.remaining}
+                      {/* {mockData.lease.remaining} */}
+                      {landAcquisitionData.leaseRemaining}
                     </td>
                   </tr>
                 </tbody>
@@ -853,10 +447,12 @@ const LandAcquisitionReport = () => {
                       Forecourt
                     </td>
                     <td className="p-2 border border-gray-200 print:border-gray-300">
-                      {mockData.civilWorks.forecourt.required}
+                      {/* {mockData.civilWorks.forecourt.required} */}
+                      {landAcquisitionData.civilWorksForecourtRequired}
                     </td>
                     <td className="p-2 border border-gray-200 print:border-gray-300">
-                      {mockData.civilWorks.forecourt.comment}
+                      {/* {mockData.civilWorks.forecourt.comment} */}
+                      {landAcquisitionData.civilWorksForecourtComment}
                     </td>
                   </tr>
                   <tr>
@@ -864,10 +460,10 @@ const LandAcquisitionReport = () => {
                       Building
                     </td>
                     <td className="p-2 border border-gray-200 print:border-gray-300">
-                      {mockData.civilWorks.building.required}
+                      {landAcquisitionData.civilWorksBuildingRequired}
                     </td>
                     <td className="p-2 border border-gray-200 print:border-gray-300">
-                      {mockData.civilWorks.building.comment}
+                      {landAcquisitionData.civilWorksBuildingComment}
                     </td>
                   </tr>
                   <tr>
@@ -875,10 +471,10 @@ const LandAcquisitionReport = () => {
                       Canopy
                     </td>
                     <td className="p-2 border border-gray-200 print:border-gray-300">
-                      {mockData.civilWorks.canopy.required}
+                      {landAcquisitionData.civilWorksCanopyComment}
                     </td>
                     <td className="p-2 border border-gray-200 print:border-gray-300">
-                      {mockData.civilWorks.canopy.comment}
+                      {landAcquisitionData.civilWorksCanopyComment}
                     </td>
                   </tr>
                   <tr>
@@ -886,10 +482,10 @@ const LandAcquisitionReport = () => {
                       Tank Farm
                     </td>
                     <td className="p-2 border border-gray-200 print:border-gray-300">
-                      {mockData.civilWorks.tankFarm.required}
+                      {landAcquisitionData.civilWorksTankFarmRequired}
                     </td>
                     <td className="p-2 border border-gray-200 print:border-gray-300">
-                      {mockData.civilWorks.tankFarm.comment}
+                      {landAcquisitionData.civilWorksTankFarmComment}
                     </td>
                   </tr>
                   <tr>
@@ -897,10 +493,10 @@ const LandAcquisitionReport = () => {
                       Electricals
                     </td>
                     <td className="p-2 border border-gray-200 print:border-gray-300">
-                      {mockData.civilWorks.electricals.required}
+                      {landAcquisitionData.civilWorksElectricalsRequired}
                     </td>
                     <td className="p-2 border border-gray-200 print:border-gray-300">
-                      {mockData.civilWorks.electricals.comment}
+                      {landAcquisitionData.civilWorksElectricalsComment}
                     </td>
                   </tr>
                 </tbody>
@@ -917,8 +513,8 @@ const LandAcquisitionReport = () => {
                     Interceptor
                   </div>
                   <div className="font-medium print:text-sm">
-                    {mockData.civilWorks.interceptor.status} (
-                    {mockData.civilWorks.interceptor.functional})
+                    {landAcquisitionData.civilWorksInterceptorStatus} (
+                    {landAcquisitionData.civilWorksInterceptorFunctional})
                   </div>
                 </div>
                 <div className="p-3 border border-gray-200 rounded-lg print:p-2 print:border-gray-300">
@@ -926,8 +522,8 @@ const LandAcquisitionReport = () => {
                     Vents
                   </div>
                   <div className="font-medium print:text-sm">
-                    {mockData.civilWorks.vents.status} (
-                    {mockData.civilWorks.vents.functional})
+                    {landAcquisitionData.civilWorksVentsStatus} (
+                    {landAcquisitionData.civilWorksVentsFunctional})
                   </div>
                 </div>
               </div>
@@ -939,7 +535,7 @@ const LandAcquisitionReport = () => {
               </h4>
               <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg print:p-2 print:border-gray-300 print:bg-gray-100">
                 <p className="text-sm print:text-xs">
-                  {mockData.civilWorks.otherWorks}
+                  {landAcquisitionData.civilWorksOtherWorks}
                 </p>
               </div>
             </div>
@@ -949,7 +545,7 @@ const LandAcquisitionReport = () => {
                 Logistics Requirements
               </h4>
               <ul className="list-disc pl-5 text-sm print:text-xs">
-                {mockData.logistics.map((item, index) => (
+                {landAcquisitionData.logistics.map((item, index) => (
                   <li key={index} className="mb-1">
                     {item}
                   </li>
@@ -972,7 +568,7 @@ const LandAcquisitionReport = () => {
                   Estimated Civil Works Cost
                 </div>
                 <div className="font-medium print:text-sm">
-                  {mockData.civilWorks.estimatedCost}
+                  {landAcquisitionData.civilWorksEstimatedCost}
                 </div>
               </div>
               <div>
@@ -980,19 +576,24 @@ const LandAcquisitionReport = () => {
                   Total Estimated Cost
                 </div>
                 <div className="font-bold print:text-sm">
-                  {mockData.totalEstimatedCost}
+                  {landAcquisitionData.totalEstimatedCost}
                 </div>
               </div>
             </div>
           </div>
 
           {/* Decision & Justification */}
-          <div className="mb-8 print-section" style={{ pageBreakInside: "avoid" }}>
+          <div
+            className="mb-8 print-section"
+            style={{ pageBreakInside: "avoid" }}
+          >
             <h4 className="text-md font-medium mb-2 print:text-sm">
               Decision Justification
             </h4>
             <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg print:p-2 print:border-gray-300 print:bg-gray-100">
-              <p className="text-sm print:text-xs">{mockData.reason}</p>
+              <p className="text-sm print:text-xs">
+                {landAcquisitionData.reason}
+              </p>
             </div>
           </div>
 

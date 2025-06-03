@@ -17,10 +17,11 @@ interface ButtonProps {
   className?: string
   startContent?: ReactNode | ReactElement | JSX.Element;
   endContent?: ReactNode | ReactElement | JSX.Element;
-
+  id?: string
 }
 
 export default function Button({
+  id,
   size,
   isDisabled,
   radius,
@@ -38,6 +39,7 @@ export default function Button({
 }: ButtonProps) {
   return (
     <NextButton
+    id={id}
       color={color}
       startContent={startContent}
       endContent={endContent}

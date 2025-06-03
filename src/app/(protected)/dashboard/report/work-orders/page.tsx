@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -29,66 +29,204 @@ import {
 } from "react-icons/fi";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
-import { Tooltip } from "@heroui/react";
+import { Spinner, Tooltip } from "@heroui/react";
 import Select, { ISelectOption } from "@/components/Select";
+import useAxios from "@/utils/useAxios";
+import swal from "sweetalert2";
+import useModal from "@/hooks/modalHook";
 
 interface WorkOrder {
-  id: number;
+  id: string;
   workOrderNumber: string;
   date: string;
   requester: string;
-  contact: string;
+  contactNumber: string;
+  assignedTechnician: string;
   location: string;
-  priority: "high" | "medium" | "low";
-  status: "Completed" | "In Progress" | "Pending";
+  description: string;
   startDate: string;
   completionDate: string;
-  assignedTechnician: string;
-  serviceType: string;
+  priority: string;
+  partsAndMaterials: string;
+  specialInstructions: string;
+  serviceType?: string;
+  status?: "Completed" | "In Progress" | "Pending";
 }
 
-const services = [
-  "Pump maintenance",
-  "Genset maintenance",
-  "Canopy cleaning and repairs",
-  "Safety equipment servicing",
-  "Painting and cleaning",
-  "Vehicle maintenance",
-];
-
-const mockWorkOrders: WorkOrder[] = Array.from({ length: 15 }, (_, i) => ({
-  id: i + 1,
-  workOrderNumber: `WO-${String(i + 1).padStart(3, "0")}`,
-  date: new Date(2024, 0, i + 1).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }),
-  requester: `Requester ${i + 1}`,
-  contact: `+1 (555) 555-${String(i + 1000).slice(1)}`,
-  location: ["Main Facility", "East Wing", "Storage Unit #3"][i % 3],
-  priority: ["high", "medium", "low"][i % 3] as "high" | "medium" | "low",
-  status: ["Completed", "In Progress", "Pending"][i % 3] as
-    | "Completed"
-    | "In Progress"
-    | "Pending",
-  startDate: new Date(2024, 0, i + 2).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  }),
-  completionDate: new Date(2024, 0, i + 5).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  }),
-  assignedTechnician: `Tech. ${["Alice", "Bob", "Charlie"][i % 3]}`,
-  serviceType: services[i % 6],
-}));
-
 const WorkOrderReports = () => {
-  const [workOrders, setWorkOrders] = useState<WorkOrder[]>(mockWorkOrders);
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [rowSelection, setRowSelection] = useState({});
+  const api = useAxios();
+  const [deletingIds, setDeletingIds] = useState<string[]>([]);
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+  const [totalCount, setTotalCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const {MemoizedModal, showModal, closeModal} = useModal()
+  // ... other states
+
+  // ... fetchWorkOrder useEffect
+
+  const showDeleteModal = (workOrder: WorkOrder) => {
+    showModal({
+      backdrop: false,
+      padded: true,
+      size: "xl",
+      children: (
+        <div className="space-y-4 p-7 font-montserrat flex flex-col items-center justify-center">
+          <div className="text-xl">{`Are you sure to delete Work Order ${workOrder.workOrderNumber}?`}</div>
+
+          <div className="w-full flex items-start justify-center gap-5">
+            <Button 
+              onPress={() => handleDelete(workOrder)} 
+              color="primary"
+              isLoading={deletingIds.includes(workOrder.id)}
+            >
+              {deletingIds.includes(workOrder.id) 
+                ? "Deleting..." 
+                : "Yes, I wish to Delete"
+              }
+            </Button>
+            <Button
+              onPress={() => closeModal()}
+              color="primary"
+              variant="light"
+              isDisabled={deletingIds.includes(workOrder.id)}
+            >
+              No, Cancel
+            </Button>
+          </div>
+        </div>
+      ),
+      baseClassName: "!pb-0",
+      onCloseCallback: closeModal,
+    });
+  };
+
+
+  const handleDelete = async (workOrder: WorkOrder) => {
+    try {
+      setDeletingIds((prev) => [...prev, workOrder.id]);
+      
+      // Optimistic UI update
+      setWorkOrders((prev) => prev.filter((wo) => wo.id !== workOrder.id));
+      setTotalCount(prev => prev - 1); // Update total count
+
+      await api.delete(`work-orders/${workOrder.id}`);
+      
+      swal.fire({
+        title: "Work order deleted successfully",
+        icon: "success",
+        toast: true,
+        timer: 2000,
+        position: "top-right",
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error(error);
+      
+      // Revert on error
+      setWorkOrders((prev) => [...prev, workOrder]);
+      setTotalCount(prev => prev + 1); // Revert count
+      
+      swal.fire({
+        title: "Failed to delete work order",
+        text: error.response?.data?.message || "Please try again later",
+        icon: "error",
+        toast: true,
+        timer: 3000,
+        position: "top-right",
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
+    } finally {
+      setDeletingIds((prev) => prev.filter((id) => id !== workOrder.id));
+      closeModal(); // Close modal after operation
+      
+      // Refetch data to ensure consistency
+      if (workOrders.length - 1 <= pagination.pageSize) {
+        const { data, totalCount } = await fetchWorkOrders(
+          pagination.pageIndex,
+          pagination.pageSize
+        );
+        setWorkOrders(data);
+        setTotalCount(totalCount);
+      }
+    }
+  };
+
+  const fetchWorkOrders = async (pageIndex: number, pageSize: number) => {
+    setIsLoading(true);
+    try {
+      const response = await api.get(
+        `work-orders/?page=${pageIndex + 1}&page_size=${pageSize}`
+      );
+
+      // Handle both paginated and non-paginated responses
+      const responseData = response.data.results || response.data;
+
+      if (!Array.isArray(responseData)) {
+        throw new Error("API response data is not an array");
+      }
+
+  
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const transformedData = responseData.map((apiOrder: any) => ({
+        id: apiOrder.id.toString(),
+        workOrderNumber: apiOrder.work_order_number,
+        date: apiOrder.date,
+        requester: apiOrder.requester,
+        contactNumber: apiOrder.contact_number,
+        assignedTechnician: apiOrder.assigned_technician,
+        location: apiOrder.location,
+        description: apiOrder.description,
+        startDate: apiOrder.start_date,
+        completionDate: apiOrder.completion_date,
+        priority: apiOrder.priority,
+        partsAndMaterials: apiOrder.parts_and_materials,
+        specialInstructions: apiOrder.special_instructions,
+        status: apiOrder.status 
+        ? apiOrder.status === 'in_progress' ? 'In Progress' 
+          : apiOrder.status.charAt(0).toUpperCase() + apiOrder.status.slice(1)
+        : 'Pending'
+      }));
+
+ 
+
+      return {
+        data: transformedData,
+        totalCount: response.data.count || responseData.length,
+      };
+    } catch (error) {
+      console.error("Failed to fetch work orders:", error);
+      return {
+        data: [],
+        totalCount: 0,
+      };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const loadData = async () => {
+      const { data, totalCount } = await fetchWorkOrders(
+        pagination.pageIndex,
+        pagination.pageSize
+      );
+      setWorkOrders(data);
+      setTotalCount(totalCount);
+    };
+    loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagination.pageIndex, pagination.pageSize]);
 
   const columns: ColumnDef<WorkOrder>[] = [
     {
@@ -119,7 +257,7 @@ const WorkOrderReports = () => {
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-500 mt-1 ">
               <FiPhone className="text-gray-400" />
-              <span>{row.original.contact}</span>
+              <span>{row.original.contactNumber}</span>
             </div>
           </div>
         </div>
@@ -127,8 +265,8 @@ const WorkOrderReports = () => {
       size: 350,
     },
     {
-      accessorKey: "serviceType",
-      header: "Service Type",
+      accessorKey: "description",
+      header: "Description",
       cell: ({ getValue }) => (
         <span className="font-medium font-montserrat text-gray-700">
           {getValue<string>()}
@@ -162,21 +300,21 @@ const WorkOrderReports = () => {
       cell: ({ row }) => {
         const statusOptions: ISelectOption[] = [
           {
-            id: "Completed",
+            id: "completed",
             label: "Completed",
             value: "Completed",
             icon: <FiCheckCircle className="text-green-500" />,
             className: "bg-green-50 text-green-700",
           },
           {
-            id: "In Progress",
+            id: "in_progress",
             label: "In Progress",
             value: "In Progress",
             icon: <FiClock className="text-blue-500" />,
             className: "bg-blue-50 text-blue-700",
           },
           {
-            id: "Pending",
+            id: "pending",
             label: "Pending",
             value: "Pending",
             icon: <FiAlertTriangle className="text-amber-500" />,
@@ -184,23 +322,54 @@ const WorkOrderReports = () => {
           },
         ];
     
-        const handleStatusChange = (selected?: ISelectOption | Array<ISelectOption>) => {
-          if (selected) {
-            // Handle both array and single selection cases
-            const newStatus = Array.isArray(selected) 
-              ? selected[0]?.value
-              : selected?.value;
-            
-            if (newStatus) {
-              setWorkOrders(prev =>
-                prev.map(wo =>
-                  wo.id === row.original.id ? { 
-                    ...wo, 
-                    status: newStatus as WorkOrder["status"] 
-                  } : wo
-                )
-              );
-            }
+        // Get the current status value
+        const currentStatus = row.original.status || 'Pending';
+    
+        const handleStatusChange = async (
+          selected?: ISelectOption | Array<ISelectOption>
+        ) => {
+          if (!selected) return;
+    
+          const newStatus = Array.isArray(selected)
+            ? selected[0]?.value
+            : selected?.value;
+    
+          if (!newStatus) return;
+    
+          const workOrderId = row.original.id;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const currentBackendStatus = row.original.status === 'In Progress' 
+            ? 'in_progress' 
+            : (row.original.status || 'pending').toLowerCase();
+    
+          // Optimistic UI update
+          setWorkOrders((prev) =>
+            prev.map((wo) =>
+              wo.id === workOrderId
+                ? { ...wo, status: newStatus as WorkOrder["status"] }
+                : wo
+            )
+          );
+    
+          try {
+            // Convert to backend format
+            const backendStatus = newStatus === 'In Progress' 
+              ? 'in_progress' 
+              : newStatus.toLowerCase();
+    
+            await api.patch(`work-orders/${workOrderId}/`, {
+              status: backendStatus
+            });
+          } catch (error) {
+            console.error("Failed to update status:", error);
+            // Revert on error
+            setWorkOrders((prev) =>
+              prev.map((wo) =>
+                wo.id === workOrderId
+                  ? { ...wo, status: currentStatus }
+                  : wo
+              )
+            );
           }
         };
     
@@ -208,15 +377,21 @@ const WorkOrderReports = () => {
           <Select
             options={statusOptions}
             onValueChange={handleStatusChange}
-            value={statusOptions.find(opt => opt.value === row.original.status)}
+            value={statusOptions.find(
+              (opt) => opt.value === currentStatus
+            )}
             valueRender={(items) => {
               const selectedItem = items[0]?.data;
               if (!selectedItem) return null;
-              
+    
               return (
-                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${selectedItem.className}`}>
+                <div
+                  className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${selectedItem.className}`}
+                >
                   {selectedItem.icon}
-                  <span className="text-sm font-medium">{selectedItem.label}</span>
+                  <span className="text-sm font-medium">
+                    {selectedItem.label}
+                  </span>
                 </div>
               );
             }}
@@ -243,14 +418,28 @@ const WorkOrderReports = () => {
               </button>
             </Tooltip>
           </Link>
-          <Tooltip content="Edit">
-            <button className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors">
-              <FiEdit className="w-5 h-5" />
-            </button>
-          </Tooltip>
+          <Link href={`/dashboard/report/work-orders/edit/${row.original.id}`}>
+            <Tooltip content="Edit">
+              <button className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors">
+                <FiEdit className="w-5 h-5" />
+              </button>
+            </Tooltip>
+          </Link>
           <Tooltip content="Delete" color="danger">
-            <button className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors">
-              <FiTrash2 className="w-5 h-5" />
+            <button
+              onClick={() => showDeleteModal(row.original)}
+              disabled={deletingIds.includes(row.original.id)}
+              className={`p-2 rounded-full transition-colors ${
+                deletingIds.includes(row.original.id)
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-gray-500 hover:text-red-600 hover:bg-red-50"
+              }`}
+            >
+              {deletingIds.includes(row.original.id) ? (
+                <Spinner size="sm" /> // Add your spinner component
+              ) : (
+                <FiTrash2 className="w-5 h-5" />
+              )}
             </button>
           </Tooltip>
         </div>
@@ -262,11 +451,15 @@ const WorkOrderReports = () => {
   const table = useReactTable({
     data: workOrders,
     columns,
+    pageCount: Math.ceil(totalCount / pagination.pageSize),
     state: {
       sorting,
       globalFilter,
       rowSelection,
+      pagination,
     },
+    onPaginationChange: setPagination,
+    manualPagination: true,
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
     onRowSelectionChange: setRowSelection,
@@ -378,42 +571,65 @@ const WorkOrderReports = () => {
               ))}
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-50 transition-colors">
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-6 py-4">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </td>
-                  ))}
+              {isLoading ? (
+                <tr>
+                  <td
+                    colSpan={columns.length}
+                    className="px-6 py-24 text-center"
+                  >
+                    <Spinner size="lg" />
+                  </td>
                 </tr>
-              ))}
+              ) : table.getRowModel().rows.length > 0 ? (
+                table.getRowModel().rows.map((row) => (
+                  <tr
+                    key={row.id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="px-6 py-4">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={columns.length}
+                    className="px-6 py-12 text-center"
+                  >
+                    No work orders found
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
 
-        {/* Table Footer */}
         <div className="p-4 border-t border-gray-100 bg-gray-50">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-600">
             <div className="flex items-center gap-4">
               <span>
-                Showing{" "}
-                {table.getState().pagination.pageIndex *
-                  table.getState().pagination.pageSize +
-                  1}
-                -
+                Showing {pagination.pageIndex * pagination.pageSize + 1}-
                 {Math.min(
-                  (table.getState().pagination.pageIndex + 1) *
-                    table.getState().pagination.pageSize,
-                  table.getFilteredRowModel().rows.length
+                  (pagination.pageIndex + 1) * pagination.pageSize,
+                  totalCount
                 )}{" "}
-                of {table.getFilteredRowModel().rows.length} work orders
+                of {totalCount} work orders
               </span>
               <select
-                value={table.getState().pagination.pageSize}
-                onChange={(e) => table.setPageSize(Number(e.target.value))}
+                value={pagination.pageSize}
+                onChange={(e) => {
+                  setPagination((prev) => ({
+                    ...prev,
+                    pageSize: Number(e.target.value),
+                    pageIndex: 0, // Reset to first page
+                  }));
+                }}
                 className="px-2 py-1 border rounded-md bg-white"
               >
                 {[5, 10, 20, 30, 40, 50].map((pageSize) => (
@@ -443,6 +659,7 @@ const WorkOrderReports = () => {
           </div>
         </div>
       </div>
+      {MemoizedModal}
     </div>
   );
 };

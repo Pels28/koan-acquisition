@@ -45,23 +45,23 @@ export interface ISectionB {
     estimatedCost: string;
     forecourt: {
       required: string;
-      comment: "";
+      comment: string;
     };
     building: {
       required: string;
-      comment: "";
+      comment: string;
     };
     canopy: {
       required:string;
-      comment: "";
+      comment: string;
     };
     tankFarm: {
       required: string;
-      comment: "";
+      comment: string;
     };
     electricals: {
       required: string;
-      comment: "";
+      comment: string;
     };
     interceptor: {
       status: string;
@@ -79,4 +79,50 @@ export interface ISectionB {
 }
 
 export type CivilWorkKey = 'forecourt' | 'building' | 'canopy' | 'tankFarm' | 'electricals';
+
+export interface LandAcquisition {
+  id: number;
+  propertyType: string;
+  locationRegion: string;
+  locationDistrict: string;
+  locationRoad: string;
+  landSize: string;
+  landValue: string;
+  stationType: string | null;
+  stationCurrentOMC: string | null;
+  stationDebtWithOMC: string | null;
+  stationTankCapacityDiesel: string | null;
+  stationTankCapacitySuper: string | null;
+  projectedVolume: string;
+  leaseYears: string;
+  leaseRemaining: string;
+  loadingLocation: string;
+  distance: string;
+  decision: string;
+  reason: string;
+  originator: string;
+  distributionManager: string;
+  position: string;
+  civilWorksEstimatedCost: string;
+  civilWorksForecourtRequired: string;
+  civilWorksForecourtComment: string;
+  civilWorksBuildingRequired: string;
+  civilWorksBuildingComment: string;
+  civilWorksCanopyRequired: string;
+  civilWorksCanopyComment: string;
+  civilWorksTankFarmRequired: string;
+  civilWorksTankFarmComment: string;
+  civilWorksElectricalsRequired: string;
+  civilWorksElectricalsComment: string;
+  civilWorksInterceptorStatus: string;
+  civilWorksInterceptorFunctional: string;
+  civilWorksVentsStatus: string;
+  civilWorksVentsFunctional: string;
+  civilWorksOtherWorks: string;
+  logistics: string[];
+  totalEstimatedCost: string;
+  created_at: string;
+  updated_at: string;
+  user: number;
+}
 

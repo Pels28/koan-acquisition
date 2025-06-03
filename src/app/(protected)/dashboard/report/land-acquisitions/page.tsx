@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -8,8 +8,8 @@ import {
   getSortedRowModel,
   flexRender,
   type ColumnDef,
-  type SortingState,
   type Row,
+  type SortingState,
 } from "@tanstack/react-table";
 import Link from "next/link";
 import {
@@ -24,63 +24,156 @@ import {
 import Input from "@/components/Input";
 import { FaSearch } from "react-icons/fa";
 import Button from "@/components/Button";
-import { Tooltip } from "@heroui/react";
-
-type Acquisition = {
-  id: number;
-  reference: string;
-  propertyType: string;
-  location: string;
-  size: string;
-  value: string;
-  stationType: string;
-  currentOMC: string;
-  debt: string;
-  tankCapacity: {
-    diesel: string;
-    super: string;
-  };
-  leaseYears: number;
-  remainingLease: number;
-  status: string;
-  worksRequired: string;
-  estimatedCost: string;
-};
-
-const mockAcquisitions: Acquisition[] = Array.from({ length: 15 }, (_, i) => ({
-  id: i + 1,
-  reference: `LA-${String(i + 1).padStart(3, "0")}`,
-  propertyType: i % 2 === 0 ? "Land" : "Station",
-  location: `${["Northern", "Central", "Southern"][i % 3]} Region`,
-  size: `${(i + 1) * 1000} sqm`,
-  value: `GHC ${(i + 1) * 50000}`,
-  stationType: ["Fuel", "LPG", "CRM"][i % 3],
-  currentOMC: ["OMC A", "OMC B", "OMC C"][i % 3],
-  debt: `GHC ${(i + 1) * 10000}`,
-  tankCapacity: {
-    diesel: `${(i + 1) * 5000}L`,
-    super: `${(i + 1) * 3000}L`,
-  },
-  leaseYears: 10 + i,
-  remainingLease: 10 + i - 2,
-  status: ["Pending", "Approved", "Rejected"][i % 3],
-  worksRequired: ["Forecourt", "Canopy", "Electricals"][i % 3],
-  estimatedCost: `GHC ${(i + 1) * 150000}`,
-}));
+import { Spinner, Tooltip } from "@heroui/react";
+import { LandAcquisition } from "@/resources/states";
+import useAxios from "@/utils/useAxios";
+import useModal from "@/hooks/modalHook";
+import swal from "sweetalert2"
 
 const LandAcquisitionDashboard = () => {
+  const api = useAxios();
+  const [landAcquisitionData, setLandAcquisitionData] = useState<
+    LandAcquisition[]
+  >([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  
+  // Pagination state
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+  const [totalCount, setTotalCount] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = useState("");
+  const { showModal, closeModal, MemoizedModal } = useModal();
 
-  const columns: ColumnDef<Acquisition>[] = [
+  const fetchLandAcquisitions = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.get(`land-acquisitions/`, {
+        params: {
+          page: pagination.pageIndex + 1,
+          page_size: pagination.pageSize,
+          search: searchTerm,
+        },
+      });
+
+      setLandAcquisitionData(response.data.results);
+      setTotalCount(response.data.count);
+    } catch (error) {
+      console.error(error);
+      setError("Failed to fetch land acquisitions data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLandAcquisitions();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagination.pageIndex, pagination.pageSize, searchTerm]);
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    // Reset to first page when searching
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      setDeletingId(id);
+      
+      // Optimistic UI update
+      setLandAcquisitionData(prev => 
+        prev.filter(item => item.id !== id)
+      );
+      setTotalCount(prev => prev - 1);
+      
+      // API call
+      await api.delete(`land-acquisitions/${id}/`);
+      
+      // Success notification
+      swal.fire({
+        title: "work order deleted succesfully",
+        icon: "success",
+        toast: true,
+        timer: 2000,
+        position: "top-right",
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error(error);
+      
+      // Revert on error
+      fetchLandAcquisitions();
+      
+      // Error notification
+      swal.fire({
+        title: "Failed to delete",
+        icon: "error",
+        toast: true,
+        timer: 2000,
+        position: "top-right",
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
+    } finally {
+      setDeletingId(null);
+      closeModal();
+    }
+  };
+
+  const showDeleteModal = (id: number) => {
+    showModal({
+      backdrop: false,
+      padded: true,
+      size: "xl",
+      children: (
+        <div className="space-y-4 p-7 font-montserrat flex flex-col items-center justify-center">
+          <div className="text-xl">Are you sure to delete this Land Acquisition?</div>
+
+          <div className="w-full flex items-start justify-center gap-5">
+            <Button 
+              onPress={() => handleDelete(id)} 
+              color="primary"
+              isLoading={deletingId === id}
+            >
+              {deletingId === id ? "Deleting..." : "Yes, I wish to Delete"}
+            </Button>
+            <Button
+              onPress={() => {
+                closeModal();
+              }}
+              color="primary"
+              variant="light"
+              isDisabled={deletingId === id}
+            >
+              No, Cancel
+            </Button>
+          </div>
+        </div>
+      ),
+      baseClassName: "!pb-0",
+      onCloseCallback: () => {
+        closeModal();
+      },
+    });
+  };
+
+  const columns: ColumnDef<LandAcquisition>[] = [
     {
       accessorKey: "propertyType",
       header: "Property Type",
-      cell: ({ row }: { row: Row<Acquisition> }) => (
+      cell: ({ row }: { row: Row<LandAcquisition> }) => (
         <Link href={`/dashboard/report/land-acquisitions/${row.original.id}`}>
           <div className="flex items-center font-montserrat gap-2">
             <FiHome className="text-gray-400" />
-            <span className="font-medium">{row.original.propertyType}</span>
+            <span className="font-medium capitalize">
+              {row.original.propertyType}
+            </span>
           </div>
         </Link>
       ),
@@ -89,18 +182,25 @@ const LandAcquisitionDashboard = () => {
     {
       accessorKey: "location",
       header: "Location Details",
-      cell: ({ row }: { row: Row<Acquisition> }) => (
+      cell: ({ row }: { row: Row<LandAcquisition> }) => (
         <div className="flex flex-col font-montserrat gap-1">
           <div className="flex items-center gap-2">
             <FiMapPin className="text-gray-400" />
-            <span className="font-medium">{row.original.location}</span>
+            <span className="font-medium">
+              {`${row.original.locationRegion}, ${row.original.locationDistrict}, ${row.original.locationRoad}`}
+            </span>
           </div>
-          <div className="text-sm text-gray-600 ml-6">
-            Size: {row.original.size}
-          </div>
-          <div className="text-sm text-gray-600 ml-6">
-            Current OMC: {row.original.currentOMC}
-          </div>
+          {row.original.propertyType === "land" && row.original.landSize && (
+            <div className="text-sm text-gray-600 ml-6">
+              Plot Size: {row.original.landSize}
+            </div>
+          )}
+          {row.original.propertyType === "station" &&
+            row.original.stationCurrentOMC && (
+              <div className="text-sm text-gray-600 ml-6">
+                Current OMC: {row.original.stationCurrentOMC}
+              </div>
+            )}
         </div>
       ),
       size: 300,
@@ -108,10 +208,12 @@ const LandAcquisitionDashboard = () => {
     {
       accessorKey: "estimatedCost",
       header: "Estimated Cost",
-      cell: ({ row }: { row: Row<Acquisition> }) => (
+      cell: ({ row }: { row: Row<LandAcquisition> }) => (
         <div className="flex font-montserrat items-center gap-2">
           <FiDollarSign className="text-gray-400" />
-          <span className="font-medium">{row.original.estimatedCost}</span>
+          <span className="font-medium">
+            GHC {row.original.totalEstimatedCost?.toLocaleString()}
+          </span>
         </div>
       ),
       size: 200,
@@ -119,7 +221,7 @@ const LandAcquisitionDashboard = () => {
     {
       id: "actions",
       header: "Actions",
-      cell: ({ row }: { row: Row<Acquisition> }) => (
+      cell: ({ row }: { row: Row<LandAcquisition> }) => (
         <div className="flex font-montserrat gap-2">
           <Link href={`/dashboard/report/land-acquisitions/${row.original.id}`}>
             <Tooltip content="view details">
@@ -128,14 +230,28 @@ const LandAcquisitionDashboard = () => {
               </button>
             </Tooltip>
           </Link>
-          <Tooltip content="edit">
-            <button className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-full">
-              <FiEdit className="w-5 h-5" />
-            </button>
-          </Tooltip>
+          <Link
+            href={`/dashboard/report/land-acquisitions/edit/${row.original.id}/`}
+          >
+            <Tooltip content="edit">
+              <button className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-full">
+                <FiEdit className="w-5 h-5" />
+              </button>
+            </Tooltip>
+          </Link>
           <Tooltip content="delete" color="danger">
-            <button className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full">
-              <FiTrash2 className="w-5 h-5" />
+            <button
+              className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full"
+              onClick={() => {
+                showDeleteModal(row.original.id);
+              }}
+              disabled={deletingId === row.original.id}
+            >
+              {deletingId === row.original.id ? (
+                <Spinner size="sm" />
+              ) : (
+                <FiTrash2 className="w-5 h-5" />
+              )}
             </button>
           </Tooltip>
         </div>
@@ -145,18 +261,21 @@ const LandAcquisitionDashboard = () => {
   ];
 
   const table = useReactTable({
-    data: mockAcquisitions,
+    data: landAcquisitionData,
     columns,
+    pageCount: Math.ceil(totalCount / pagination.pageSize),
     state: {
+      pagination,
       sorting,
-      globalFilter,
+      globalFilter: searchTerm,
     },
+    onPaginationChange: setPagination,
+    manualPagination: true,
     onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
   });
 
   return (
@@ -195,7 +314,8 @@ const LandAcquisitionDashboard = () => {
                 Land Acquisitions
               </h1>
               <p className="text-gray-600">
-                {table.getFilteredRowModel().rows.length} records found
+                {totalCount} records found • Page {pagination.pageIndex + 1} of{" "}
+                {table.getPageCount()}
               </p>
             </div>
             <div className="flex gap-3 w-full md:w-[50%]">
@@ -205,8 +325,8 @@ const LandAcquisitionDashboard = () => {
                 label=""
                 type="search"
                 placeholder="Search acquisitions..."
-                value={globalFilter ?? ""}
-                onChange={(e) => setGlobalFilter(e.target.value)}
+                value={searchTerm}
+                onChange={handleSearch}
                 size="lg"
                 radius="md"
                 fullWidth
@@ -237,42 +357,81 @@ const LandAcquisitionDashboard = () => {
               ))}
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-50">
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-6 py-4">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </td>
-                  ))}
+              {isLoading ? (
+                <tr>
+                  <td
+                    colSpan={columns.length}
+                    className="text-center py-8 text-gray-500"
+                  >
+                    <div className="flex justify-center">
+                      <Spinner size="lg" />
+                    </div>
+                  </td>
                 </tr>
-              ))}
+              ) : error ? (
+                <tr>
+                  <td
+                    colSpan={columns.length}
+                    className="text-center py-8 text-red-500"
+                  >
+                    {error}
+                  </td>
+                </tr>
+              ) : landAcquisitionData.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={columns.length}
+                    className="text-center py-8 text-gray-500"
+                  >
+                    No acquisitions found
+                  </td>
+                </tr>
+              ) : (
+                table.getRowModel().rows.map((row) => (
+                  <tr key={row.id} className="hover:bg-gray-50">
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="px-6 py-4">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
 
         {/* Table Footer */}
         <div className="p-4 border-t bg-gray-50">
-          <div className="flex justify-between items-center text-sm text-gray-600">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-600">
             <div className="flex items-center gap-4">
-              <span>
-                Page {table.getState().pagination.pageIndex + 1} of{" "}
-                {table.getPageCount()}
-              </span>
+              <span>Items per page:</span>
               <select
-                value={table.getState().pagination.pageSize}
-                onChange={(e) => table.setPageSize(Number(e.target.value))}
-                className="px-2 py-1 border rounded-md"
+                value={pagination.pageSize}
+                onChange={(e) => {
+                  table.setPageSize(Number(e.target.value));
+                }}
+                className="px-3 py-1 border rounded-md"
               >
-                {[10, 20, 30].map((pageSize) => (
-                  <option key={pageSize} value={pageSize}>
-                    Show {pageSize}
+                {[10, 20, 30, 50].map((size) => (
+                  <option key={size} value={size}>
+                    {size}
                   </option>
                 ))}
               </select>
+              <span>
+                Showing {pagination.pageIndex * pagination.pageSize + 1} to{" "}
+                {Math.min(
+                  (pagination.pageIndex + 1) * pagination.pageSize,
+                  totalCount
+                )}{" "}
+                of {totalCount} items
+              </span>
             </div>
+
             <div className="flex gap-2">
               <Button
                 onPress={() => table.previousPage()}
@@ -295,6 +454,7 @@ const LandAcquisitionDashboard = () => {
           </div>
         </div>
       </div>
+      {MemoizedModal}
     </div>
   );
 };

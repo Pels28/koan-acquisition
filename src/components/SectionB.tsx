@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Button from "./Button";
 import { FaArrowLeft } from "react-icons/fa6";
 import { IoMdSend } from "react-icons/io";
@@ -11,7 +12,7 @@ import TextArea from "./TextArea";
 interface ISectionBProps {
   onPrevious?: () => void;
   initData: ISectionB;
-  onComplete?: () => void
+  onComplete: (data: any) => void;
 }
 
 const SectionB = ({ onPrevious, initData, onComplete }: ISectionBProps) => {
@@ -33,9 +34,9 @@ const SectionB = ({ onPrevious, initData, onComplete }: ISectionBProps) => {
         validateOnChange={false}
         validationSchema={Yup.object({})}
         onSubmit={async (values) => {
-          console.log(values);
+      
           if (onComplete) {
-            onComplete()
+            onComplete(values);
           }
         }}
       >
@@ -47,10 +48,10 @@ const SectionB = ({ onPrevious, initData, onComplete }: ISectionBProps) => {
           handleChange,
           handleSubmit,
           setFieldValue,
-          isSubmitting
+          isSubmitting,
         }) => {
           return (
-            <form onSubmit={handleSubmit} noValidate>
+            <form onSubmit={handleSubmit}>
               <div>
                 <h2 className="text-xl font-bold text-gray-800 mb-4">
                   SECTION B
@@ -109,7 +110,7 @@ const SectionB = ({ onPrevious, initData, onComplete }: ISectionBProps) => {
                                 `civilWorks.${item.name}.required`,
                                 v
                               );
-                              console.log(v);
+                        
                             }}
                             required
                           />
@@ -154,7 +155,7 @@ const SectionB = ({ onPrevious, initData, onComplete }: ISectionBProps) => {
                           }
                           onValueChange={(v) => {
                             setFieldValue(`civilWorks.interceptor.status`, v);
-                            console.log(v);
+                        
                           }}
                           required
                         />
@@ -171,7 +172,7 @@ const SectionB = ({ onPrevious, initData, onComplete }: ISectionBProps) => {
                               value: "non-functional",
                             },
                           ]}
-                          value={values.civilWorks.interceptor.status}
+                          value={values.civilWorks.interceptor.functional}
                           onBlur={handleBlur}
                           error={
                             touched.civilWorks?.interceptor?.functional
@@ -183,7 +184,7 @@ const SectionB = ({ onPrevious, initData, onComplete }: ISectionBProps) => {
                               `civilWorks.interceptor.functional`,
                               v
                             );
-                            console.log(v);
+                        
                           }}
                           required
                         />
@@ -212,7 +213,7 @@ const SectionB = ({ onPrevious, initData, onComplete }: ISectionBProps) => {
                           }
                           onValueChange={(v) => {
                             setFieldValue(`civilWorks.vents.status`, v);
-                            console.log(v);
+                       
                           }}
                           required
                         />
@@ -223,7 +224,8 @@ const SectionB = ({ onPrevious, initData, onComplete }: ISectionBProps) => {
                           size="sm"
                           orientation="horizontal"
                           options={[
-                            { title: "Functional", value: "functional" },
+                            { title: "Functional", 
+                              value: "functional", },
                             {
                               title: "Non Functional",
                               value: "non-functional",
@@ -238,7 +240,7 @@ const SectionB = ({ onPrevious, initData, onComplete }: ISectionBProps) => {
                           }
                           onValueChange={(v) => {
                             setFieldValue(`civilWorks.vents.functional`, v);
-                            console.log(v);
+                        
                           }}
                           required
                         />
@@ -305,7 +307,7 @@ const SectionB = ({ onPrevious, initData, onComplete }: ISectionBProps) => {
               </div>
               <div className="w-full flex flex-row items-start justify-between">
                 <Button
-                type="button"
+                  type="button"
                   startContent={<FaArrowLeft />}
                   size="lg"
                   radius="md"

@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from "react";
-import { jwtDecode } from "jwt-decode";  // Changed from jwt_decode to jwtDecode
+import { jwtDecode } from "jwt-decode"; // Changed from jwt_decode to jwtDecode
 import { useRouter } from "next/navigation";
 import * as paths from "@/resources/paths";
 import { baseUrl } from "@/utils/useAxios";
@@ -11,7 +11,7 @@ type AuthTokens = {
 } | null;
 
 type User = {
-  user_id?: string
+  user_id?: string;
   email?: string;
   first_name?: string;
   last_name?: string;
@@ -21,15 +21,19 @@ type User = {
   bio?: string;
   image?: string;
   verfied?: boolean;
-
 } | null;
 
- export type AuthContextType = {
+export type AuthContextType = {
   user: User;
   setUser: React.Dispatch<React.SetStateAction<User>>;
   authTokens: AuthTokens;
   setAuthTokens: React.Dispatch<React.SetStateAction<AuthTokens>>;
-  registerUser: (first_name: string, last_name: string, email: string, password: string) => Promise<void>;
+  registerUser: (
+    first_name: string,
+    last_name: string,
+    email: string,
+    password: string
+  ) => Promise<void>;
   loginUser: (email: string, password: string) => Promise<void>;
   logoutUser: () => void;
 };
@@ -38,13 +42,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export default AuthContext;
 
-export const AuthProvider = ({ children }: Readonly<{ children: React.ReactNode }>) => {
+export const AuthProvider = ({
+  children,
+}: Readonly<{ children: React.ReactNode }>) => {
   const router = useRouter();
-  
-  
 
   const [authTokens, setAuthTokens] = useState<AuthTokens>(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const tokens = localStorage.getItem("authTokens");
       return tokens ? JSON.parse(tokens) : null;
     }
@@ -52,7 +56,7 @@ export const AuthProvider = ({ children }: Readonly<{ children: React.ReactNode 
   });
 
   const [user, setUser] = useState<User>(() => {
-    if (typeof window !== 'undefined' && authTokens) {
+    if (typeof window !== "undefined" && authTokens) {
       return jwtDecode(authTokens.access);
     }
     return null;
@@ -60,17 +64,16 @@ export const AuthProvider = ({ children }: Readonly<{ children: React.ReactNode 
 
   const [loading, setLoading] = useState(true);
 
-
-
   const loginUser = async (email: string, password: string) => {
     const response = await fetch(`${baseUrl}api/token/`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email, password
-      })
+        email,
+        password,
+      }),
     });
     const data = await response.json();
 
@@ -79,27 +82,35 @@ export const AuthProvider = ({ children }: Readonly<{ children: React.ReactNode 
       setUser(jwtDecode(data.access));
       localStorage.setItem("authTokens", JSON.stringify(data));
       router.push("/");
-   
     } else {
       console.error("Login failed:", response.status, data);
       throw new Error(data.detail || "Login failed");
-      
     }
   };
 
-  const registerUser = async (first_name: string, last_name: string, email: string, password: string) => {
+  const registerUser = async (
+    first_name: string,
+    last_name: string,
+    email: string,
+    password: string
+  ) => {
     const response = await fetch(`${baseUrl}api/register/`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        first_name, last_name, email, password,
-      })
+        first_name,
+        last_name,
+        email,
+        password,
+      }),
     });
 
     if (response.status === 201) {
-      router.push(`/?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.signIn}`);
+      router.push(
+        `/?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.signIn}`
+      );
     } else {
       const errorData = await response.json();
       console.error("Registration failed:", response.status, errorData);
@@ -111,7 +122,12 @@ export const AuthProvider = ({ children }: Readonly<{ children: React.ReactNode 
     setAuthTokens(null);
     setUser(null);
     localStorage.removeItem("authTokens");
-    router.push(`/?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.signIn}`);
+    // router.push(`/?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.signIn}`);
+    window.history.replaceState(
+      {},
+      "",
+      `/?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.signIn}`
+    );
   };
 
   const contextData: AuthContextType = {
@@ -136,6 +152,4 @@ export const AuthProvider = ({ children }: Readonly<{ children: React.ReactNode 
       {loading ? null : children}
     </AuthContext.Provider>
   );
-
-
 };

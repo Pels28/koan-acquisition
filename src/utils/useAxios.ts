@@ -89,12 +89,12 @@ import { jwtDecode } from "jwt-decode";
 import dayjs from "dayjs";
 import { useContext } from "react";
 import AuthContext, { AuthContextType } from "@/context/authContext";
-import * as paths from "@/resources/paths";
+// import * as paths from "@/resources/paths";
 import swal from "sweetalert2";
 
-// const baseUrl = "http://127.0.0.1:8000/";
-export const baseUrl = "https://django-koan-backend.onrender.com/";
 
+// export const baseUrl = "http://127.0.0.1:8000/";
+export const baseUrl = "https://django-koan-backend.onrender.com/";
 
 interface JwtPayload {
   exp: number;
@@ -118,6 +118,7 @@ const useAxios = () => {
     AuthContext
   ) as AuthContextType;
 
+
   const axiosInstance = axios.create({
     baseURL: baseUrl,
     timeout: 1000000,
@@ -133,7 +134,10 @@ const useAxios = () => {
         const user = jwtDecode<JwtPayload>(authTokens.access);
         const isExpired = dayjs.unix(user.exp).isBefore(dayjs());
 
-        if (!isExpired) return req;
+        if (!isExpired) {
+          req.headers.Authorization = `Bearer ${authTokens.access}`;
+          return req;
+        }
 
         // Initialize headers if undefined
         req.headers = req.headers || {};
@@ -159,11 +163,9 @@ const useAxios = () => {
       } catch (error) {
         console.error("Token refresh failed:", error);
         logoutUser();
-        window.history.replaceState(
-          {},
-          "",
-          `/?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.signIn}`
-        );
+        // router.replace(
+        //   `/?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.signIn}`
+        // );
         swal.fire({
           title: "Session Expired",
           text: "Please log in again",
@@ -178,16 +180,18 @@ const useAxios = () => {
   );
 
   // axiosInstance.interceptors.response.use(
-  //   (response: AxiosResponse) => response,
-  //   async (error: AxiosError) => {
-  //     if (error.response?.status === 401) {
-  //       localStorage.removeItem("authTokens");
+  //   (response) => response,
+  //   async (error) => {
+  //     if (
+  //       error.response?.status === 401 &&
+  //       !error.config.url.includes("token")
+  //     ) {
   //       logoutUser();
-  // window.history.replaceState(
-  //   {},
-  //   "",
-  //   `/?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.signIn}`
-  // );
+  //       // window.history.replaceState(
+  //       //   {},
+  //       //   "",
+  //       //   `/?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.signIn}`
+  //       // );
   //     }
   //     return Promise.reject(error);
   //   }

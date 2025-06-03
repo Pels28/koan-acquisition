@@ -40,7 +40,10 @@ export default function DatePicker({
   value,
   variants,
 }: IDatePickerProps) {
+  const calendarValue = value || null
   return (
+
+    
     <NextDatePicker
       classNames={{ inputWrapper: ["border-gray", "border-2"] }}
       name={name}
@@ -51,7 +54,7 @@ export default function DatePicker({
       isInvalid={Boolean(error)}
       isDisabled={isDisabled}
       isReadOnly={isReadOnly}
-      value={value}
+      value={calendarValue}
       variant={variants}
       size={size}
       radius={radius}

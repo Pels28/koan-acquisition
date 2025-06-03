@@ -8,11 +8,13 @@ import Input from "./Input";
 import TextArea from "./TextArea";
 
 interface ISectionAProps {
-  onNext?: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onNext: (data: any) => void;
   initData?: ISectionA;
+  onComplete?: (data: ISectionA) => void;
 }
 
-const SectionA = ({ onNext, initData }: ISectionAProps) => {
+const SectionA = ({ onNext, initData,  }: ISectionAProps) => {
   return (
     <div className="space-y-6">
       <Formik
@@ -20,8 +22,9 @@ const SectionA = ({ onNext, initData }: ISectionAProps) => {
         validateOnBlur
         validateOnChange={false}
         validationSchema={Yup.object({})}
-        onSubmit={async (values) => {
-          console.log(values);
+        onSubmit={async () => {
+         
+          // onComplete(values);
         }}
       >
         {({
@@ -60,7 +63,7 @@ const SectionA = ({ onNext, initData }: ISectionAProps) => {
                     }
                     onValueChange={(v) => {
                       setFieldValue("propertyType", v);
-                      console.log(v);
+                 
                     }}
                   />
                 </div>
@@ -157,7 +160,7 @@ const SectionA = ({ onNext, initData }: ISectionAProps) => {
                       }
                       onValueChange={(v) => {
                         setFieldValue("stationDetails.type", v);
-                        console.log(v);
+                   
                       }}
                     />
                   </div>
@@ -309,7 +312,7 @@ const SectionA = ({ onNext, initData }: ISectionAProps) => {
                   error={touched.decision ? errors.decision : undefined}
                   onValueChange={(v) => {
                     setFieldValue("decision", v);
-                    console.log(v);
+                
                   }}
                 />
               </div>
@@ -330,7 +333,9 @@ const SectionA = ({ onNext, initData }: ISectionAProps) => {
               <div className="flex justify-end mt-5">
                 <Button
                   color="primary"
-                  onPress={onNext}
+                  onPress={() => {
+                    onNext(values);
+                  }}
                   size="lg"
                   radius="md"
                   endContent={<FaArrowRight />}

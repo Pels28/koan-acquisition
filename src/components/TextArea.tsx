@@ -41,6 +41,7 @@ export default function TextArea({
 }: ITextAreaProps) {
   return (
     <NextTextArea
+    style={{ whiteSpace: 'pre-line' }}
     className={`font-montserrat ${className}`}
     name={name}
     isRequired={isRequired}
