@@ -4,10 +4,8 @@ import Input from "@/components/Input";
 import { Formik } from "formik";
 import { FaArrowRight } from "react-icons/fa6";
 import * as Yup from "yup";
-import { TbLockQuestion } from "react-icons/tb";
 import swal from "sweetalert2"
 
-import * as paths from "@/resources/paths";
 
 // import { toast } from "react-toastify";
 import { useContext, } from "react";
@@ -134,13 +132,13 @@ const SignIn = ({ onComplete }: ISignInProps) => {
                   Login
                 </Button>
 
-                <div>
+                {/* <div>
                   <div
                     onClick={() => {
                       window.history.pushState(
                         {},
                         "",
-                        `/?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.forgotPassword}`
+                        `/?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.resetPassword}`
                       );
                     }}
                     className="text-primary font-semibold flex justify-center items-center gap-x-1 cursor-pointer w-fit mx-auto"
@@ -148,9 +146,9 @@ const SignIn = ({ onComplete }: ISignInProps) => {
                     <span>
                       <TbLockQuestion className="w-5 h-5" />
                     </span>
-                    Forgot your password
+                    Reset your  password
                   </div>
-                </div>
+                </div> */}
 
                 <div className="text-center font-montserrat text-black ">
                   Not having an account yet?

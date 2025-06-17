@@ -43,82 +43,161 @@ const LandAcquisitionReport = () => {
 
  
 
+  const getBase64Image = async (src: string): Promise<string> => {
+    return new Promise((resolve) => {
+      // Create a normal HTML image element
+      const img = new window.Image();
+      img.crossOrigin = "Anonymous";
+      img.src = src;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return resolve("");
+        
+        // Set canvas size to match image but limit maximum size
+        const maxDimension = 1000;
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > height && width > maxDimension) {
+          height *= maxDimension / width;
+          width = maxDimension;
+        } else if (height > maxDimension) {
+          width *= maxDimension / height;
+          height = maxDimension;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", 0.7)); // Compressed JPEG
+      };
+      img.onerror = () => resolve("");
+    });
+  };
+  
   const generatePDF = async () => {
     if (!reportRef.current) return;
-
+  
     const pdf = new jsPDF("p", "mm", "a4");
     const element = reportRef.current;
-
-    // PDF configuration
-    const pageWidth = 210;
-    const pageHeight = 297;
+    const pageWidth = pdf.internal.pageSize.getWidth();
     const margin = 15;
     let yPos = margin;
-
-    // Add font and set initial style
-    pdf.setFont("montserrat", "normal");
-    pdf.setFontSize(11);
-
-    // First page header
-    const addHeader = () => {
-      pdf.setFontSize(14);
-      pdf.setFont("montserrat", "bold");
-      pdf.text("KOAN TECHNICAL SERVICES", margin, yPos);
-      pdf.setFontSize(10);
-      pdf.text(
-        "123 Business Street, Accra • Tel: +233 123 456 789",
-        margin,
-        yPos + 5
-      );
-      yPos += 20;
-    };
-
-    // Check for page break
-    const checkPageBreak = (spaceNeeded: number) => {
-      if (yPos + spaceNeeded > pageHeight - margin) {
-        pdf.addPage();
-        yPos = margin;
-        // addHeader();
+    let firstPage = true; // Flag to track first page
+  
+    // Add centered header with logo ONLY on first page
+    const addHeader = async () => {
+      if (!firstPage) return; // Skip if not first page
+      
+      try {
+        // Add logo (centered)
+        const logoData = await getBase64Image("/images/koan-logo.jpg");
+        if (logoData) {
+          const logoWidth = 30; // mm
+          const logoHeight = 30; // mm
+          pdf.addImage(
+            logoData,
+            "JPEG",
+            pageWidth / 2 - logoWidth / 2,
+            yPos,
+            logoWidth,
+            logoHeight
+          );
+          yPos += logoHeight + 5;
+        }
+  
+        // Add company name (centered)
+        pdf.setFontSize(14);
+        pdf.setFont("montserrat", "bold");
+        pdf.text("KOAN TECHNICAL SERVICES", pageWidth / 2, yPos, {
+          align: "center"
+        });
+        yPos += 7;
+  
+        // Add address (centered)
+        pdf.setFontSize(10);
+        pdf.text(
+          "123 Business Street, Accra • Tel: +233 123 456 789",
+          pageWidth / 2,
+          yPos,
+          { align: "center" }
+        );
+        yPos += 10;
+      } catch (error) {
+        console.error("Header error:", error);
+        yPos += 10;
       }
     };
-
-    // Initial header
-    addHeader();
-
+  
+    // Add header only on first page
+    await addHeader();
+  
     // Get all printable sections
     const sections = Array.from(element.querySelectorAll(".print-section"));
-
+    
+    // Add text content manually for missing data (only on first page)
+    if (firstPage) {
+      pdf.setFontSize(12);
+      pdf.setFont("montserrat", "bold");
+      pdf.text("Decision: ", margin, yPos);
+      pdf.setFont("montserrat", "normal");
+      pdf.text(
+        landAcquisitionData?.decision.toUpperCase() || "N/A",
+        margin + 25,
+        yPos
+      );
+      yPos += 10;
+    }
+  
     for (const section of sections) {
-      const sectionHeight = section.clientHeight * 0.264583; // Convert px to mm
-
-      // Check if section fits on current page
-      if (yPos + sectionHeight > pageHeight - margin) {
+      const sectionElement = section as HTMLElement;
+      
+      // Check if we need a page break (leave 20mm margin at bottom)
+      if (yPos > pdf.internal.pageSize.getHeight() - 20) {
         pdf.addPage();
         yPos = margin;
-        // addHeader();
+        firstPage = false; // No longer on first page
       }
-
-      // Convert section to canvas
-      const canvas = await html2canvas(section as HTMLElement, {
-        scale: 2,
+  
+      // Convert section to canvas with optimized settings
+      const canvas = await html2canvas(sectionElement, {
+        scale: 1,
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
+        ignoreElements: (el) => el.classList.contains("no-print"),
       });
-
-      // Add section to PDF
-      const imgData = canvas.toDataURL("image/png");
+  
+      // Calculate image dimensions to fit page width
       const imgWidth = pageWidth - margin * 2;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      pdf.addImage(imgData, "PNG", margin, yPos, imgWidth, imgHeight);
-      yPos += imgHeight + 10;
-
-      // Add section spacing
-      checkPageBreak(10);
+  
+      // Add to PDF as compressed JPEG
+      pdf.addImage(
+        canvas.toDataURL("image/jpeg", 0.7),
+        "JPEG",
+        margin,
+        yPos,
+        imgWidth,
+        imgHeight
+      );
+  
+      yPos += imgHeight + 5;
     }
-
-    pdf.save("land-acquisition-report.pdf");
+    // Save with compressed output
+    const pdfOutput = pdf.output("arraybuffer");
+    const compressedPdf = new Blob([pdfOutput], { type: "application/pdf" });
+    const url = URL.createObjectURL(compressedPdf);
+    
+    // Create download link
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `land-acquisition-report-${new Date().toISOString().split("T")[0]}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   if (isLoading) {
@@ -200,7 +279,7 @@ const LandAcquisitionReport = () => {
               <div>
                 <div className="flex items-center mb-2">
                   <Image
-                    src="/logo.png"
+                    src="/images/koan-logo.jpg"
                     alt="Company Logo"
                     className="h-12 mr-4 print:h-10"
                   />

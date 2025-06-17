@@ -36,6 +36,7 @@ export type AuthContextType = {
   ) => Promise<void>;
   loginUser: (email: string, password: string) => Promise<void>;
   logoutUser: () => void;
+  changePassword: (oldPassword: string, newPassword: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -130,6 +131,32 @@ export const AuthProvider = ({
     );
   };
 
+  const changePassword = async (oldPassword: string, newPassword: string) => {
+    if (!authTokens) {
+      throw new Error("Not authenticated");
+    }
+  
+    const response = await fetch(`${baseUrl}api/change-password/`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${authTokens.access}`,
+      },
+      body: JSON.stringify({
+        old_password: oldPassword,
+        new_password: newPassword,
+      }),
+    });
+  
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Password change failed");
+    }
+  
+    // Optionally log the user out after password change
+    logoutUser();
+  };
+
   const contextData: AuthContextType = {
     user,
     setUser,
@@ -138,6 +165,7 @@ export const AuthProvider = ({
     registerUser,
     loginUser,
     logoutUser,
+    changePassword
   };
 
   useEffect(() => {

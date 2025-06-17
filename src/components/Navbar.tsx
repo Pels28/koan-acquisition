@@ -6,8 +6,8 @@ import useModal from "@/hooks/modalHook";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useCallback, useEffect } from "react";
 import * as paths from "@/resources/paths";
-import ForgotPassword from "./ForgotPassword";
-import InstructionSent from "./InstructionsSent";
+
+import ResetPassword from "./ResetPassword";
 // import VerificationSent from "./VerificationSent";
 // import ConfirmPassword from "./password/reset/confirm/[uid]/[token]/page";
 
@@ -87,25 +87,17 @@ const Navbar = () => {
      
   }, [showModal, closeModal, showLoadingScreen, closeAuthPopUps]); // Add all dependencies used in the callback
 
-  const showForgotPassword = () => {
+  const showResetPassword = () => {
     showModal({
       title: "",
       size: "xl",
       padded: true,
       children: (
-        <ForgotPassword
-          onComplete={(email) => {
+        <ResetPassword
+          onComplete={() => {
             closeModal();
            
-            setTimeout(() => {
-              showModal({
-                title: "",
-                size: "xl",
-                children: (
-                  <InstructionSent email={email} onClose={closeModal} />
-                ),
-              });
-            }, 100);
+      
           }}
         />
       ),
@@ -139,8 +131,8 @@ const Navbar = () => {
           showRegister();
           break;
 
-        case paths.SEARCH_PARAMS.auth.forgotPassword:
-          showForgotPassword();
+        case paths.SEARCH_PARAMS.auth.resetPassword:
+          showResetPassword();
           break;
         default:
           // Clear the auth param if it's not recognized
@@ -175,7 +167,7 @@ const Navbar = () => {
         >
           Login
         </Button>
-        <Button
+        {/* <Button
           size="lg"
           radius="md"
           color="primary"
@@ -190,7 +182,7 @@ const Navbar = () => {
           }}
         >
           Sign Up
-        </Button>
+        </Button> */}
       </div>
       {MemoizedModal}
     </nav>

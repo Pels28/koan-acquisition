@@ -1,16 +1,19 @@
 "use client";
 import { FiFileText, FiPieChart } from "react-icons/fi";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Avatar } from "@heroui/react";
 import Dropdown from "@/components/Dropdown";
 import { PiSignOutBold } from "react-icons/pi";
 import * as paths from "@/resources/paths";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import AuthContext, { AuthContextType } from "@/context/authContext";
 import swal from "sweetalert2";
 import { MdAddAPhoto } from "react-icons/md";
 import useAxios from "@/utils/useAxios";
+import { TbLockQuestion } from "react-icons/tb";
+import useModal from "@/hooks/modalHook";
+import ResetPassword from "@/components/ResetPassword";
 
 export default function DashboardLayout({
   children,
@@ -19,12 +22,14 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const inputFileRef = useRef<HTMLInputElement>(null);
   const api = useAxios();
   const [userImage, setUserImage] = useState("");
 
   const isActive = (route: string) => pathname.startsWith(route);
+  const {MemoizedModal, closeModal, showModal} = useModal()
 
   const { user, logoutUser, setUser } = useContext(
     AuthContext
@@ -38,14 +43,11 @@ export default function DashboardLayout({
     }
   }, [user, router]);
 
-
-
   useEffect(() => {
     const fetchUserImage = async () => {
       try {
         const userResponse = await api.get("api/user/me/");
 
-      
         setUserImage(userResponse.data.profile.image);
       } catch (error) {
         console.error(error);
@@ -57,8 +59,6 @@ export default function DashboardLayout({
 
   const handleFileUpload = async (file: File) => {
     if (!user) return;
-
-   
 
     const formData = new FormData();
     formData.append("image", file);
@@ -86,6 +86,55 @@ export default function DashboardLayout({
   //     dispatch(getUserInfo());
   //   }
   // }, [dispatch, user?.access])
+
+  const closeAuthPopUps = useCallback(() => {
+    const currentPath = window.location.pathname;
+    const currentKey = searchParams.get(paths.AUTH_SEARCH_PARAM_KEY);
+    if (currentKey) {
+      window.history.pushState({}, "", `${currentPath}?${paths.AUTH_SEARCH_PARAM_KEY}=''`);
+    }
+  }, [searchParams]);
+
+  const showResetPassword = () => {
+    showModal({
+      title: "",
+      size: "xl",
+      padded: true,
+      backdropStyle: "opaque",
+      children: (
+        <ResetPassword
+          onComplete={() => {
+            closeModal();
+           
+      
+          }}
+        />
+      ),
+      baseClassName: "!pb-0",
+      onCloseCallback: () => {
+        closeModal();
+        closeAuthPopUps();
+      },
+    });
+  }; // Add all dependencies used in the callback
+
+  useEffect(() => {
+    const key = searchParams.get(paths.AUTH_SEARCH_PARAM_KEY);
+    if (key) {
+      switch (key) {
+
+
+        case paths.SEARCH_PARAMS.auth.resetPassword:
+          showResetPassword();
+          break;
+        default:
+          // Clear the auth param if it's not recognized
+          closeAuthPopUps();
+          break;
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -136,6 +185,23 @@ export default function DashboardLayout({
                   //   "",
                   //   `/?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.signIn}`
                   // );
+                },
+              },
+              {
+                id: "reset-password",
+                label: <div className="font-montserrat">Reset Password</div>,
+                icon: <TbLockQuestion className="w-5 h-5" />,
+                onClick: () => {
+                  // Get current path without search params
+                  const currentPath = window.location.pathname;
+                  // Append the auth search param to current URL
+                  window.history.pushState(
+                    {},
+                    "",
+                    `${currentPath}?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.resetPassword}`
+                  );
+                  // Force a re-render to trigger the modal
+                  window.dispatchEvent(new Event('popstate'));
                 },
               },
             ]}
@@ -211,6 +277,7 @@ export default function DashboardLayout({
           </div>
         </div>
       </div>
+      {MemoizedModal}
     </div>
   );
 }

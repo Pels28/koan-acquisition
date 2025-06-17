@@ -28,12 +28,29 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Ensure better printing */
+.print-section {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+/* Optimize images for print */
+img {
+  max-width: 100%;
+  height: auto;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* Hide unnecessary elements */
+.no-print {
+  display: none !important;
+}
+
 @media print {
-  .page-break {
-    display: block;
-    page-break-before: always;
-  }
-  .print-section {
-    page-break-inside: avoid;
+  /* Ensure background colors print */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }
