@@ -43,7 +43,7 @@ interface IWorkOrderFormProps {
 
 const WorkOrderForm = ({ onComplete, initialData }: IWorkOrderFormProps) => {
   const router = useRouter();
-  const { Modal } = useModal();
+  const { Modal, showLoadingScreen } = useModal();
   const dateRef = useRef<HTMLDivElement | null>(null);
   const workOrderNumberRef = useRef<HTMLDivElement | null>(null);
   const requesterRef = useRef<HTMLDivElement | null>(null);
@@ -114,8 +114,6 @@ const WorkOrderForm = ({ onComplete, initialData }: IWorkOrderFormProps) => {
     }
   };
 
-
-
   const formatDate = (dateObj: any) => {
     if (!dateObj) return null;
     return `${dateObj.year}-${String(dateObj.month).padStart(2, "0")}-${String(
@@ -156,7 +154,6 @@ const WorkOrderForm = ({ onComplete, initialData }: IWorkOrderFormProps) => {
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-800">Work Order Form</h1>
           {/* Replace with your organization's logo */}
-        
         </div>
         <Formik
           initialValues={initialData}
@@ -190,6 +187,7 @@ const WorkOrderForm = ({ onComplete, initialData }: IWorkOrderFormProps) => {
           })}
           onSubmit={async (values, { setSubmitting, resetForm }) => {
             try {
+              showLoadingScreen();
               if (params.id) {
                 await api.patch(`work-orders/${params.id}/`, {
                   date: formatDate(values.date),
@@ -390,7 +388,6 @@ const WorkOrderForm = ({ onComplete, initialData }: IWorkOrderFormProps) => {
                         : undefined
                     }
                     placeholder="Select Department"
-                    
                     onChange={handleChange}
                     onBlur={handleBlur}
                     required
