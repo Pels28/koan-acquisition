@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import React, { useContext, useEffect } from "react";
-import * as paths from "@/resources/paths";
+// import * as paths from "@/resources/paths";
 import AuthContext, { AuthContextType } from "@/context/authContext";
 
 const AuthProvider = ({
@@ -12,7 +12,8 @@ const AuthProvider = ({
 
   useEffect(() => {
     if (!user) {
-      router.replace(`/?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.signIn}`);
+      // router.replace(`/?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.signIn}`);
+      router.replace("/")
     }
   }, [user, router]);
   return <>{children}</>;

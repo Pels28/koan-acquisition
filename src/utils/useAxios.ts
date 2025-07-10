@@ -21,6 +21,7 @@ interface JwtPayload {
   full_name?: string;
   bio?: string;
   image?: string;
+  is_manager?: boolean
   verified?: boolean;
 }
 

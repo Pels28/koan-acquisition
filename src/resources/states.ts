@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface ISectionA {
   propertyType: string;
   location: {
@@ -124,5 +125,9 @@ export interface LandAcquisition {
   created_at: string;
   updated_at: string;
   user: number;
+  review_status: string
+  review_date?: string
+  review_notes?: string
+  reviewed_by: any
 }
 

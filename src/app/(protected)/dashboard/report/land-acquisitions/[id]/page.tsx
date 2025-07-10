@@ -1,17 +1,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import Button from "@/components/Button";
 import Link from "next/link";
-import { FiChevronRight } from "react-icons/fi";
+import { FiAlertTriangle, FiCheckCircle, FiChevronRight } from "react-icons/fi";
 import { IoDownload } from "react-icons/io5";
 import { Image } from "@heroui/react";
 import { useParams } from "next/navigation";
 import useAxios from "@/utils/useAxios";
 import { LandAcquisition } from "@/resources/states";
 import ReportSkeleton from "./ReportSkeleton";
+import AuthContext, { AuthContextType } from "@/context/authContext";
+import { FaCheck, FaTimes } from "react-icons/fa";
+import swal from "sweetalert2";
+import useModal from "@/hooks/modalHook";
+import { Formik } from "formik";
+import * as Yup from "yup";
+import TextArea from "@/components/TextArea";
 
 const LandAcquisitionReport = () => {
   const reportRef = useRef<HTMLDivElement>(null);
@@ -21,27 +28,134 @@ const LandAcquisitionReport = () => {
     useState<LandAcquisition | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useContext(AuthContext) as AuthContextType;
+  const { MemoizedModal, closeModal, showModal } = useModal();
 
   useEffect(() => {
     const fetchLandAcquistion = async () => {
       try {
         setIsLoading(true);
         const response = await api.get(`land-acquisitions/${params.id}/`);
-      
+
         setLandAcquisitionData(response.data);
+
+        console.log(response.data);
       } catch (error: any) {
         console.error(error);
-        setError(error)
+        setError(error);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchLandAcquistion();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id]);
 
- 
+  const showAcceptOrRejectModal = (actionType: string) => {
+    showModal({
+      title: "",
+      size: "xl",
+      padded: true,
+      backdrop: false,
+      children: (
+        <div className="text-center p-5">
+          <Formik
+            initialValues={{ reason: "" }}
+            validateOnBlur
+            validateOnChange={false}
+            validationSchema={Yup.object().shape({
+              reason: Yup.string().required("Please give a reason"),
+            })}
+            onSubmit={async (values) => {
+              const { reason } = values;
+
+              try {
+                const response = await api.post(
+                  `land-acquisitions/${params.id}/review/`,
+                  {
+                    action: actionType, // 'approve' or 'reject'
+                    notes: reason, // State variable for textarea
+                  }
+                );
+
+                console.log("approved", response.data);
+
+                // Handle success - update state, show notification, etc.
+
+                swal.fire({
+                  title: `${
+                    actionType === "approve" ? "approved" : "rejected"
+                  } successfully!`,
+                  icon: "success",
+                  toast: true,
+                  timer: 3000,
+                  position: "top-right",
+                  timerProgressBar: true,
+                  showConfirmButton: false,
+                });
+                setLandAcquisitionData(response.data);
+                closeModal();
+              } catch (error: any) {
+                console.error("Review failed:", error);
+
+                swal.fire({
+                  title: `Review failed: ${
+                    error.response?.data?.error || error.message
+                  }`,
+                  icon: "error",
+                  toast: true,
+                  timer: 3000,
+                  position: "top-right",
+                  timerProgressBar: true,
+                  showConfirmButton: false,
+                });
+              }
+            }}
+          >
+            {({
+              handleBlur,
+              handleSubmit,
+              values,
+              handleChange,
+              errors,
+              touched,
+              isSubmitting,
+            }) => {
+              return (
+                <form className="space-y-4" onSubmit={handleSubmit}>
+                  <TextArea
+                    name="reason"
+                    value={values.reason}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    placeholder="State your reason for your decision"
+                    minRows={10}
+                    isRequired
+                    error={touched.reason ? errors.reason : undefined}
+                  />
+                  <Button
+                    className="mb-4"
+                    fullWidth
+                    size="lg"
+                    color="primary"
+                    type="submit"
+                    isLoading={isSubmitting}
+                  >
+                    Submit
+                  </Button>
+                </form>
+              );
+            }}
+          </Formik>
+        </div>
+      ),
+      baseClassName: "!pb-0",
+      onCloseCallback: () => {
+        closeModal();
+      },
+    });
+  };
 
   const getBase64Image = async (src: string): Promise<string> => {
     return new Promise((resolve) => {
@@ -53,12 +167,12 @@ const LandAcquisitionReport = () => {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
         if (!ctx) return resolve("");
-        
+
         // Set canvas size to match image but limit maximum size
         const maxDimension = 1000;
         let width = img.width;
         let height = img.height;
-        
+
         if (width > height && width > maxDimension) {
           height *= maxDimension / width;
           width = maxDimension;
@@ -66,7 +180,7 @@ const LandAcquisitionReport = () => {
           width *= maxDimension / height;
           height = maxDimension;
         }
-        
+
         canvas.width = width;
         canvas.height = height;
         ctx.drawImage(img, 0, 0, width, height);
@@ -75,21 +189,21 @@ const LandAcquisitionReport = () => {
       img.onerror = () => resolve("");
     });
   };
-  
+
   const generatePDF = async () => {
     if (!reportRef.current) return;
-  
+
     const pdf = new jsPDF("p", "mm", "a4");
     const element = reportRef.current;
     const pageWidth = pdf.internal.pageSize.getWidth();
     const margin = 15;
     let yPos = margin;
     let firstPage = true; // Flag to track first page
-  
+
     // Add centered header with logo ONLY on first page
     const addHeader = async () => {
       if (!firstPage) return; // Skip if not first page
-      
+
       try {
         // Add logo (centered)
         const logoData = await getBase64Image("/images/koan-logo.jpg");
@@ -106,15 +220,15 @@ const LandAcquisitionReport = () => {
           );
           yPos += logoHeight + 5;
         }
-  
+
         // Add company name (centered)
         pdf.setFontSize(14);
         pdf.setFont("montserrat", "bold");
         pdf.text("KOAN TECHNICAL SERVICES", pageWidth / 2, yPos, {
-          align: "center"
+          align: "center",
         });
         yPos += 7;
-  
+
         // Add address (centered)
         pdf.setFontSize(10);
         pdf.text(
@@ -129,13 +243,13 @@ const LandAcquisitionReport = () => {
         yPos += 10;
       }
     };
-  
+
     // Add header only on first page
     await addHeader();
-  
+
     // Get all printable sections
     const sections = Array.from(element.querySelectorAll(".print-section"));
-    
+
     // Add text content manually for missing data (only on first page)
     if (firstPage) {
       pdf.setFontSize(12);
@@ -149,17 +263,17 @@ const LandAcquisitionReport = () => {
       );
       yPos += 10;
     }
-  
+
     for (const section of sections) {
       const sectionElement = section as HTMLElement;
-      
+
       // Check if we need a page break (leave 20mm margin at bottom)
       if (yPos > pdf.internal.pageSize.getHeight() - 20) {
         pdf.addPage();
         yPos = margin;
         firstPage = false; // No longer on first page
       }
-  
+
       // Convert section to canvas with optimized settings
       const canvas = await html2canvas(sectionElement, {
         scale: 1,
@@ -168,11 +282,11 @@ const LandAcquisitionReport = () => {
         backgroundColor: "#ffffff",
         ignoreElements: (el) => el.classList.contains("no-print"),
       });
-  
+
       // Calculate image dimensions to fit page width
       const imgWidth = pageWidth - margin * 2;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-  
+
       // Add to PDF as compressed JPEG
       pdf.addImage(
         canvas.toDataURL("image/jpeg", 0.7),
@@ -182,18 +296,20 @@ const LandAcquisitionReport = () => {
         imgWidth,
         imgHeight
       );
-  
+
       yPos += imgHeight + 5;
     }
     // Save with compressed output
     const pdfOutput = pdf.output("arraybuffer");
     const compressedPdf = new Blob([pdfOutput], { type: "application/pdf" });
     const url = URL.createObjectURL(compressedPdf);
-    
+
     // Create download link
     const link = document.createElement("a");
     link.href = url;
-    link.download = `land-acquisition-report-${new Date().toISOString().split("T")[0]}.pdf`;
+    link.download = `land-acquisition-report-${
+      new Date().toISOString().split("T")[0]
+    }.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -267,6 +383,84 @@ const LandAcquisitionReport = () => {
         </nav>
       </div>
 
+      {landAcquisitionData?.review_status == "pending_review" && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 my-6 rounded">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <FiAlertTriangle className="h-5 w-5 text-yellow-400" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">
+                <strong>Approval pending</strong> - This work order must be
+                approved by a manager before the report can be downloaded.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {landAcquisitionData?.review_status == "approved" && (
+        <div className="bg-green-50 border-l-4 border-green-400 p-4 my-6 rounded">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <FiCheckCircle className="h-5 w-5 text-green-400" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-green-700">
+                <strong>Approved</strong> - This work order has been approved by{" "}
+                <span>{landAcquisitionData.reviewed_by?.full_name}</span>&nbsp;
+                ready to be downloaded.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {landAcquisitionData?.review_status == "rejected" && (
+        <div className="bg-green-50 border-l-4 border-red-400 p-4 my-6 rounded">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <FiCheckCircle className="h-5 w-5 text-red-400" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">
+                <strong>Rejected</strong> - This work order has been rejected.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {landAcquisitionData?.review_status == "pending_review" &&
+        user?.is_manager && (
+          <div className="w-full p-2 flex flex-row items-start justify-end gap-2">
+            <Button
+              className="text-white"
+              color="success"
+              size="md"
+              radius="sm"
+              onPress={() => {
+                showAcceptOrRejectModal("approve");
+              }}
+              endContent={<FaCheck className="text-white" />}
+            >
+              Accept
+            </Button>
+            <Button
+              className="text-white"
+              color="danger"
+              size="md"
+              radius="sm"
+              onPress={() => {
+                showAcceptOrRejectModal("reject");
+              }}
+              endContent={<FaTimes />}
+            >
+              Reject
+            </Button>
+          </div>
+        )}
+
       {/* Main Content */}
       <div className="min-h-screen bg-white p-8 font-montserrat print:p-0">
         <div
@@ -318,7 +512,7 @@ const LandAcquisitionReport = () => {
 
           {/* Summary Card */}
           <div className="mb-8 p-4 border border-gray-200 rounded-lg bg-gray-50 print:p-3 print:border-gray-300">
-            <div className="grid grid-cols-3 gap-4 print:grid-cols-3">
+            <div className="grid grid-cols-2 gap-4 print:grid-cols-2">
               <div>
                 <h4 className="text-sm font-semibold text-gray-600 print:text-xs">
                   Property Type
@@ -335,7 +529,7 @@ const LandAcquisitionReport = () => {
                   {landAcquisitionData.locationRoad}
                 </p>
               </div>
-              <div>
+              {/* <div>
                 <h4 className="text-sm font-semibold text-gray-600 print:text-xs">
                   Decision
                 </h4>
@@ -348,7 +542,7 @@ const LandAcquisitionReport = () => {
                 >
                   {landAcquisitionData.decision.toUpperCase()}
                 </p>
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -737,14 +931,25 @@ const LandAcquisitionReport = () => {
                   <div className="mb-1 text-sm font-medium print:text-xs">
                     General Manager
                   </div>
-
-                  <div className="mt-6 pt-6 border-t border-gray-300 relative">
+                  <p> {landAcquisitionData.reviewed_by?.full_name || "NA"}</p>
+                  <div className="mt-3 pt-6 border-t border-gray-300 relative">
                     <div className="text-xs text-gray-500 absolute top-0 print:text-2xs">
                       Signature
                     </div>
                   </div>
                   <div className="text-xs text-gray-500 mt-1 print:text-2xs">
                     Date:
+                    {landAcquisitionData?.review_date
+                      ? new Date(
+                          landAcquisitionData.review_date
+                        ).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : "N/A"}
                   </div>
                 </div>
 
@@ -777,14 +982,22 @@ const LandAcquisitionReport = () => {
             size="lg"
             radius="md"
             endContent={<IoDownload className="text-lg" />}
+            isDisabled={landAcquisitionData.review_status !== "approved"}
           >
             Download PDF Report
           </Button>
-          <p className="mt-4 text-sm text-gray-500">
-            Official document requires authorized signatures and company stamp
-          </p>
+          {landAcquisitionData.review_status == "approved" ? (
+            <p className="mt-4 text-sm text-gray-500">
+              this document is now approved and ready to be downloaded
+            </p>
+          ) : (
+            <p className="mt-4 text-sm text-gray-500">
+              this document can be downloaded after approval from a manager
+            </p>
+          )}
         </div>
       </div>
+      {MemoizedModal}
     </>
   );
 };

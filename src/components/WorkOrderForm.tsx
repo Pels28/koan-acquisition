@@ -13,9 +13,10 @@ import { useRef } from "react";
 import useAxios from "@/utils/useAxios";
 import swal from "sweetalert2";
 import { CalendarDate } from "@heroui/react";
-import {  useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { FiChevronRight } from "react-icons/fi";
+import { departments } from "@/resources/departments";
 
 interface WorkOrder {
   id?: string;
@@ -57,8 +58,6 @@ const WorkOrderForm = ({ onComplete, initialData }: IWorkOrderFormProps) => {
   const api = useAxios();
   const params = useParams();
 
-
-   
   const scrollToErrorField = (errors: any) => {
     if (errors.date) {
       dateRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -115,7 +114,8 @@ const WorkOrderForm = ({ onComplete, initialData }: IWorkOrderFormProps) => {
     }
   };
 
-   
+
+
   const formatDate = (dateObj: any) => {
     if (!dateObj) return null;
     return `${dateObj.year}-${String(dateObj.month).padStart(2, "0")}-${String(
@@ -156,9 +156,7 @@ const WorkOrderForm = ({ onComplete, initialData }: IWorkOrderFormProps) => {
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-800">Work Order Form</h1>
           {/* Replace with your organization's logo */}
-          <div className="mt-2 text-sm text-gray-500">
-            [Organization Name/Logo]
-          </div>
+        
         </div>
         <Formik
           initialValues={initialData}
@@ -167,9 +165,9 @@ const WorkOrderForm = ({ onComplete, initialData }: IWorkOrderFormProps) => {
           validationSchema={Yup.object({
             date: Yup.date().required("Date is required"),
             // Fixed field name to match initialValues
-            workOrderNumber: Yup.string()
-              .trim()
-              .required("Work order number is required"),
+            // workOrderNumber: Yup.string()
+            //   .trim()
+            //   .required("Work order number is required"),
             requester: Yup.string().trim().required("Requester is required"),
             contactNumber: Yup.string()
               .trim()
@@ -191,12 +189,11 @@ const WorkOrderForm = ({ onComplete, initialData }: IWorkOrderFormProps) => {
               .required("Parts and materials are required"),
           })}
           onSubmit={async (values, { setSubmitting, resetForm }) => {
-        
             try {
               if (params.id) {
                 await api.patch(`work-orders/${params.id}/`, {
                   date: formatDate(values.date),
-                  work_order_number: values.workOrderNumber,
+                  // work_order_number: values.workOrderNumber,
                   requester: values.requester,
                   contact_number: values.contactNumber,
                   assigned_technician: values.assignedTechnician,
@@ -223,7 +220,7 @@ const WorkOrderForm = ({ onComplete, initialData }: IWorkOrderFormProps) => {
               } else {
                 const response = await api.post("work-orders/", {
                   date: formatDate(values.date),
-                  work_order_number: values.workOrderNumber,
+                  // work_order_number: values.workOrderNumber,
                   requester: values.requester,
                   contact_number: values.contactNumber,
                   assigned_technician: values.assignedTechnician,
@@ -300,7 +297,6 @@ const WorkOrderForm = ({ onComplete, initialData }: IWorkOrderFormProps) => {
                   (acc, field) => {
                     acc[field] = true;
                     return acc;
-                     
                   },
                   {} as any
                 );
@@ -308,7 +304,6 @@ const WorkOrderForm = ({ onComplete, initialData }: IWorkOrderFormProps) => {
                 setTouched(touchedFields);
 
                 const errors = await validateForm();
-               
 
                 if (Object.keys(errors).length > 0) {
                   scrollToErrorField(errors);
@@ -339,8 +334,8 @@ const WorkOrderForm = ({ onComplete, initialData }: IWorkOrderFormProps) => {
                   />
                 </div>
 
-                <div className="space-y-1" ref={workOrderNumberRef}>
-                  <Input
+                {/* <div className="space-y-1" ref={workOrderNumberRef}> */}
+                {/* <Input
                     radius="sm"
                     size="lg"
                     type="text"
@@ -357,23 +352,60 @@ const WorkOrderForm = ({ onComplete, initialData }: IWorkOrderFormProps) => {
                         : undefined
                     }
                     isRequired
-                  />
-                </div>
+                  /> */}
+                {/* </div> */}
 
                 <div className="space-y-1" ref={requesterRef}>
-                  <Input
-                    type="text"
+                  {/* <Select
+                    // type="text"
                     label="Requester"
                     labelPlacement="outside"
                     name="requester"
-                    value={values.requester}
+                    options={[
+
+                    ]}
+                    // value={values.requester}
                     placeholder="Requester"
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    isRequired
+                    required
                     radius="sm"
                     size="lg"
                     error={touched.requester ? errors.requester : undefined}
+                  /> */}
+                  <Select
+                    label="Requester"
+                    labelPlacement="outside"
+                    name="requester"
+                    options={departments}
+                    value={
+                      values.requester
+                        ? {
+                            id: values.requester
+                              .toLowerCase()
+                              .replace(/\s+/g, "_"),
+                            label: values.requester,
+                            value: values.requester,
+                          }
+                        : undefined
+                    }
+                    placeholder="Select Department"
+                    
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    required
+                    radius="sm"
+                    size="lg"
+                    error={touched.requester ? errors.requester : undefined}
+                    onValueChange={(val) => {
+                      if (!val) {
+                        setFieldValue("requester", "");
+                      } else if (Array.isArray(val)) {
+                        setFieldValue("requester", val[0]?.value || "");
+                      } else {
+                        setFieldValue("requester", val.value);
+                      }
+                    }}
                   />
                 </div>
 

@@ -1,0 +1,17 @@
+export const regionCodes = {
+    AR: "Ahafo Region",
+    ASR: "Ashanti Region",
+    BR: "Bono Region",
+    BER: "Bono East Region",
+    CR: "Eastern Region",
+    GAR: "Greater Accra Region",
+    NR: "Northern Region",
+    NER: "North East Region",
+    OR: "Oti Region",
+    SR: "Savannah Region",
+    UER: "Upper East Region",
+    UWR: "Upper West Region",
+    VR: "Volta Region",
+    WR: "Western Region",
+    WNR: "Western North Region",
+  };

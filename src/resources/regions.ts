@@ -1,0 +1,18 @@
+export const regions =[
+    { label: "Ahafo", key: "ahafo", description: "" },
+    { label: "Ashanti", key: "ashanti", description: "" },
+    { label: "Bono", key: "bono", description: "" },
+    { label: "Bono East", key: "bono_east", description: "" },
+    { label: "Central", key: "central", description: "" },
+    { label: "Eastern", key: "eastern", description: "" },
+    { label: "Greater Accra", key: "greater_accra", description: "Capital region" },
+    { label: "North East", key: "north_east", description: "" },
+    { label: "Northern", key: "northern", description: "" },
+    { label: "Oti", key: "oti", description: "" },
+    { label: "Savannah", key: "savannah", description: "" },
+    { label: "Upper East", key: "upper_east", description: "" },
+    { label: "Upper West", key: "upper_west", description: "" },
+    { label: "Volta", key: "volta", description: "" },
+    { label: "Western", key: "western", description: "" },
+    { label: "Western North", key: "western_north", description: "" },
+  ]

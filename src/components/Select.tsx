@@ -155,6 +155,7 @@ export default function Select({
         selectedKeys={selectedKeys() as Iterable<Key>}
         onSelectionChange={handleSelectionChange}
         onChange={onChange}
+        
         onBlur={(e) => {
           
             if (onBlur) {
@@ -164,7 +165,7 @@ export default function Select({
         renderValue={valueRender}
         classNames={{
           innerWrapper: "border-gray-neutral",
-          value: clsx("text-secondary py-2.5", valueClassName ?? ""),
+          value: clsx(" py-2.5", valueClassName ?? ""),
           label: clsx(
           ),
           trigger: clsx("h-14 rounded-medium", { "border-red-500": error }, triggerClassName ?? ""),

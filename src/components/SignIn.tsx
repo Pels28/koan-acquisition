@@ -10,14 +10,18 @@ import swal from "sweetalert2"
 // import { toast } from "react-toastify";
 import { useContext, } from "react";
 import AuthContext, { AuthContextType } from "@/context/authContext";
+import { useRouter } from "next/navigation";
+import useModal from "@/hooks/modalHook";
 
 interface ISignInProps {
   onClose?: () => void;
-  onComplete: () => void;
+  onComplete?: () => void;
 }
 
 const SignIn = ({ onComplete }: ISignInProps) => {
   const { loginUser } = useContext(AuthContext) as AuthContextType;
+  const router = useRouter()
+  const {showLoadingScreen, MemoizedModal} = useModal()
   // const dispatch = useDispatch()
   // const {user, isLoading, isError, isSuccess, message} = useSelector((state) => state.auth)
 
@@ -29,7 +33,7 @@ const SignIn = ({ onComplete }: ISignInProps) => {
 
   return (
     <div className="text-primary overflow-auto">
-      <div className="pt-2 pb-10 px-6">
+      <div className="pt-2 ">
         <Formik
           initialValues={{
             email: "",
@@ -58,7 +62,12 @@ const SignIn = ({ onComplete }: ISignInProps) => {
                 timerProgressBar: true,
                 showConfirmButton: false,
               });
-              onComplete();
+              showLoadingScreen()
+              router.push("/")
+              if (onComplete) {
+                onComplete();
+              }
+            
             } catch (error: unknown) {
               let errorMessage = "Login failed. Please try again.";
 
@@ -93,7 +102,7 @@ const SignIn = ({ onComplete }: ISignInProps) => {
             touched,
             isSubmitting,
           }) => (
-            <form className="space-y-7" onSubmit={handleSubmit}>
+            <form className="space-y-10" onSubmit={handleSubmit}>
               <div className="space-y-10">
                 <Input
                   type="text"
@@ -164,6 +173,7 @@ const SignIn = ({ onComplete }: ISignInProps) => {
           )}
         </Formik>
       </div>
+      {MemoizedModal}
     </div>
   );
 };

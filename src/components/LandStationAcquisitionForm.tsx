@@ -25,21 +25,7 @@ const LandStationAcquisitionForm = ({
     useState<ISectionA>(sectionAInitData);
 
   const [sectionBFormData, setSectionBFormData] = useState<ISectionB>(
-    //   {
-    //   civilWorks: {
-    //     estimatedCost: "",
-    //     forecourt: { required: "", comment: "" },
-    //     building: { required: "", comment: "" },
-    //     canopy: { required: "", comment: "" },
-    //     tankFarm: { required: "", comment: "" },
-    //     electricals: { required: "", comment: "" },
-    //     interceptor: { status: "", functional: "" },
-    //     vents: { status: "", functional: "" },
-    //     otherWorks: "",
-    //   },
-    //   logistics: ["", "", "", "", "", ""],
-    //   totalEstimatedCost: "",
-    // }
+
     sectionBInitData
   );
 
@@ -117,8 +103,8 @@ const LandStationAcquisitionForm = ({
         leaseRemaining: sectionA.lease?.remaining || "",
         loadingLocation: sectionA.loadingLocation,
         distance: sectionA.distance,
-        decision: sectionA.decision,
-        reason: sectionA.reason,
+        // decision: sectionA.decision,
+        // reason: sectionA.reason,
         originator: sectionA.originator,
         distributionManager: sectionA.distributionManager,
         position: sectionA.position,
@@ -235,9 +221,7 @@ const LandStationAcquisitionForm = ({
         <h1 className="text-2xl font-bold text-gray-800">
           LAND / STATION ACQUISITION FORM
         </h1>
-        <div className="mt-2 text-sm text-gray-500">
-          [COMPANY ADDRESS AND LOGO]
-        </div>
+     
       </div>
 
       <Stepper

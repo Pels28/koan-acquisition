@@ -6,7 +6,7 @@ interface ButtonProps {
   size?: "sm" | "md" | "lg";
   isDisabled?: boolean;
   radius?: "full" | "lg" | "md" | "sm" | "none";
-  color?: "default" | "primary" | "secondary" | "danger";
+  color?: "default" | "primary" | "secondary" | "danger" | "success";
   isIconOnly?: boolean;
   children?: ReactNode | ReactElement | JSX.Element;
   isLoading?: boolean;

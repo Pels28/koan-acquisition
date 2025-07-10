@@ -4,10 +4,14 @@ import SignIn from "./SignIn";
 import SignUp from "./SignUp";
 import useModal from "@/hooks/modalHook";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useCallback, useEffect } from "react";
+import { useCallback, useContext, useEffect } from "react";
 import * as paths from "@/resources/paths";
+import Link from "next/link";
 
 import ResetPassword from "./ResetPassword";
+import AuthContext, { AuthContextType } from "@/context/authContext";
+import { FaArrowRight } from "react-icons/fa";
+import { Avatar } from "@heroui/react";
 // import VerificationSent from "./VerificationSent";
 // import ConfirmPassword from "./password/reset/confirm/[uid]/[token]/page";
 
@@ -16,6 +20,7 @@ const Navbar = () => {
     useModal();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { user } = useContext(AuthContext) as AuthContextType;
 
   // const closeAuthPopUps = useCallback(() => {
   //   if (window)
@@ -53,7 +58,7 @@ const Navbar = () => {
         closeAuthPopUps();
       },
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showModal, closeModal, showLoadingScreen, closeAuthPopUps]); // Add all dependencies used in the callback
 
   const showRegister = useCallback(() => {
@@ -64,7 +69,7 @@ const Navbar = () => {
       children: (
         <SignUp
           onComplete={() => {
-            showLoadingScreen()
+            showLoadingScreen();
             closeModal();
             // setTimeout(() => {
             //   showModal({
@@ -84,7 +89,6 @@ const Navbar = () => {
         closeAuthPopUps();
       },
     });
-     
   }, [showModal, closeModal, showLoadingScreen, closeAuthPopUps]); // Add all dependencies used in the callback
 
   const showResetPassword = () => {
@@ -96,8 +100,6 @@ const Navbar = () => {
         <ResetPassword
           onComplete={() => {
             closeModal();
-           
-      
           }}
         />
       ),
@@ -143,6 +145,8 @@ const Navbar = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]); // Remove showRegister and showSignIn from dependencies
 
+  console.log(user);
+
   return (
     <nav className="flex justify-between items-center p-6 bg-white shadow-sm">
       <div className="flex items-center">
@@ -151,22 +155,48 @@ const Navbar = () => {
         </h1>
       </div>
       <div className="flex space-x-4">
-        <Button
-          onPress={() => {
-            window.history.pushState(
-              {},
-              "",
-              `/?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.signIn}`
-            );
-          }}
-          size="lg"
-          radius="md"
-          color="primary"
-          variant="light"
-          className="font-poppins"
-        >
-          Login
-        </Button>
+        {user ? (
+          <Link href="/dashboard">
+            <Button
+              size="lg"
+              radius="md"
+              color="primary"
+              className="font-poppins max-w-[250px] overflow-hidden whitespace-nowrap text-ellipsis"
+              endContent={<FaArrowRight />}
+              startContent={
+                <Avatar
+                  showFallback
+                  name={user.first_name}
+                  size="md"
+                  isBordered
+                  src={`https://django-koan-backend.onrender.com${user.image}`}
+                />
+              }
+            >
+              {user.first_name}&nbsp;{user.last_name}
+            </Button>
+          </Link>
+        ) : (
+          <Link href="login">
+            <Button
+              // onPress={() => {
+              //   window.history.pushState(
+              //     {},
+              //     "",
+              //     `/?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.signIn}`
+              //   );
+              // }}
+              size="lg"
+              radius="md"
+              color="primary"
+              variant="light"
+              className="font-poppins"
+            >
+              Login
+            </Button>
+          </Link>
+        )}
+
         {/* <Button
           size="lg"
           radius="md"

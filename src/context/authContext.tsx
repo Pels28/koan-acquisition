@@ -1,3 +1,4 @@
+"use client"
 import { createContext, useState, useEffect } from "react";
 import { jwtDecode } from "jwt-decode"; // Changed from jwt_decode to jwtDecode
 import { useRouter } from "next/navigation";
@@ -15,6 +16,7 @@ type User = {
   email?: string;
   first_name?: string;
   last_name?: string;
+  is_manager?: boolean
   jti?: string;
   iat?: string;
   full_name?: string;
@@ -124,11 +126,12 @@ export const AuthProvider = ({
     setUser(null);
     localStorage.removeItem("authTokens");
     // router.push(`/?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.signIn}`);
-    window.history.replaceState(
-      {},
-      "",
-      `/?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.signIn}`
-    );
+    // window.history.replaceState(
+    //   {},
+    //   "",
+    //   `/?${paths.AUTH_SEARCH_PARAM_KEY}=${paths.SEARCH_PARAMS.auth.signIn}`
+    // );
+    router.replace("/")
   };
 
   const changePassword = async (oldPassword: string, newPassword: string) => {
