@@ -80,7 +80,7 @@ const WorkOrderDashboard = ({filter}: WorkOrderReportsProps) => {
   const { MemoizedModal, showModal, closeModal } = useModal();
   
 
-  console.log("filter", filter)
+ 
   // ... other states
 
   // ... fetchWorkOrder useEffect
@@ -191,7 +191,6 @@ const WorkOrderDashboard = ({filter}: WorkOrderReportsProps) => {
       const responseData = response.data.results || response.data;
 
 
-      console.log("yes",responseData)
 
       if (!Array.isArray(responseData)) {
         throw new Error("API response data is not an array");

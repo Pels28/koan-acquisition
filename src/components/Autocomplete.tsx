@@ -8,7 +8,7 @@ import {
 interface IAutoconpleteProps {
   error?: string;
   onInputChange: (value: string) => void;
-  onSelectionChanege: (id: Key | null) => void;
+  onSelectionChanege?: (id: Key | null) => void;
   items: { label: string; key: string; description: string }[];
   className?: string;
   label: string | ReactNode;

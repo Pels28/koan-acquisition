@@ -39,7 +39,7 @@ const LandAcquisitionReport = () => {
 
         setLandAcquisitionData(response.data);
 
-        console.log(response.data);
+      
       } catch (error: any) {
         console.error(error);
         setError(error);
@@ -79,7 +79,6 @@ const LandAcquisitionReport = () => {
                   }
                 );
 
-                console.log("approved", response.data);
 
                 // Handle success - update state, show notification, etc.
 

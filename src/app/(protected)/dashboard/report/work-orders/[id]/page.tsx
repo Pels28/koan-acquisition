@@ -66,7 +66,7 @@ const WorkOrderReport = () => {
     const fetchWorkOrder = async () => {
       try {
         const response = await api.get(`work-orders/${id}`);
-        console.log("rrsponse", response);
+       
         setReportData({
           id: response.data.id,
           assignedTechnician: response.data.assigned_technician,
@@ -97,12 +97,12 @@ const WorkOrderReport = () => {
       }
     };
     fetchWorkOrder();
-    console.log("reportedData", reportData)
+  
   }, []);
 
 
 
-  console.log("reportedData", reportData)
+ 
 
 
 
@@ -133,7 +133,7 @@ const WorkOrderReport = () => {
                   }
                 );
 
-                console.log("approved", response.data);
+       
 
                 // Handle success - update state, show notification, etc.
 
@@ -410,7 +410,7 @@ const WorkOrderReport = () => {
     pdf.save(`work-order-${reportData.workOrderNumber}.pdf`);
   };
 
-  console.log(reportData);
+
 
 
 

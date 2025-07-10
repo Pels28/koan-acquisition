@@ -145,7 +145,7 @@ const Navbar = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]); // Remove showRegister and showSignIn from dependencies
 
-  console.log(user);
+ 
 
   return (
     <nav className="flex justify-between items-center p-6 bg-white shadow-sm">

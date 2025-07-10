@@ -27,7 +27,7 @@ const WorkOrderPage = () => {
           (wo: any) => wo.review_status === "pending_review"
         );
 
-        console.log("unapproved", unapproved)
+      
         setUnapprovedWorkOrders(unapproved);
       } catch (err) {
         console.error(err);

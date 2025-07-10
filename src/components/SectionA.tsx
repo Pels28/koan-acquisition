@@ -62,7 +62,7 @@ const SectionA = ({ onNext, initData }: ISectionAProps) => {
           handleSubmit,
           setFieldValue,
         }) => {
-          console.log("answeer", values.location?.region);
+       
           return (
             <form
               noValidate
@@ -101,7 +101,7 @@ const SectionA = ({ onNext, initData }: ISectionAProps) => {
                   name="location.region"
                   value={values.location?.region}
                   onInputChange={(value) => {
-                    console.log("value", value);
+                  
                     setFieldValue("location.region", value);
                     // setSelectedRegion(value)
                   }}
@@ -129,9 +129,7 @@ const SectionA = ({ onNext, initData }: ISectionAProps) => {
                     onInputChange={(value) =>
                       setFieldValue("location.district", value)
                     }
-                    onSelectionChanege={(id) => {
-                      console.log(id);
-                    }}
+                   
                     label="District"
                     items={districts}
                     labelPlacement="outside"
@@ -388,7 +386,7 @@ const SectionA = ({ onNext, initData }: ISectionAProps) => {
                   color="primary"
                   onPress={() => {
                     onNext(values);
-                    console.log("values", values)
+               
                   }}
                   size="lg"
                   radius="md"
